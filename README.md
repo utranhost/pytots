@@ -1,4 +1,4 @@
-# py-ts
+# pytots
 
 一个轻量级的工具，帮助你将Python类型转换为TypeScript类型。
 
@@ -14,7 +14,7 @@
 使用uv安装：
 
 ```bash
-uv add py-ts
+uv add pytots
 ```
 
 ## 快速开始

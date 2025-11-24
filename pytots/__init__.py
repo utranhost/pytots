@@ -1,6 +1,6 @@
-"""py-ts: A lightweight tool that helps you convert Python types to TypeScript types"""
+"""pytots: A lightweight tool that helps you convert Python types to TypeScript types"""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 # 导入主要功能
 from .main import (

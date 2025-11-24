@@ -4,7 +4,7 @@
 """
 
 from typing import Any, Union, Optional, List, Dict, Tuple, Set
-from py_ts import convert_to_ts, get_output_ts_str, output_ts_file
+from pytots import convert_to_ts, get_output_ts_str, output_ts_file
 
 
 def basic_types_demo():

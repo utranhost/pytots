@@ -10,7 +10,7 @@
 
 from typing import TypedDict, NewType, TypeVar, Generic, Callable, Optional, List, Dict, Any
 from dataclasses import dataclass
-from py_ts import convert_to_ts, get_output_ts_str, output_ts_file, reset_store
+from pytots import convert_to_ts, get_output_ts_str, output_ts_file, reset_store
 
 
 def typed_dict_demo():

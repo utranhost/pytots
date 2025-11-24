@@ -11,7 +11,7 @@ from typing import (
     ClassVar,
 )
 
-from py_ts.type_map import (
+from pytots.type_map import (
     map_base_type,
     map_typedDict_type,
     map_newType_type,

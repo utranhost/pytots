@@ -1,9 +1,9 @@
 [project]
-name = "py-ts"
+name = "pytots"
 authors = [
     { name = "utran", email = "utran.host@qq.com" },
 ]
-dynamic = ['version']
+version = "0.2.0"
 description = "A lightweight tool that helps you convert Python types to TypeScript types"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,8 +14,7 @@ dependencies = [
 
 
 
-[tool.hatch.version]
-path = "py_ts/__init__.py"
+
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
@@ -27,10 +26,10 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["py_ts"]
+packages = ["pytots"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["py_ts"]
+packages = ["pytots"]
 
 [[tool.uv.index]]
 name = "tsinghua"

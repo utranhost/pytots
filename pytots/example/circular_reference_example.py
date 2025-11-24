@@ -5,7 +5,7 @@
 
 from typing import TypedDict, Callable, Optional, List, Dict, Any, Union
 from dataclasses import dataclass, field
-from py_ts import convert_to_ts, get_output_ts_str, output_ts_file, reset_store
+from pytots import convert_to_ts, get_output_ts_str, output_ts_file, reset_store
 
 
 @dataclass

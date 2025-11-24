@@ -7,12 +7,15 @@ dynamic = ['version']
 description = "A lightweight tool that helps you convert Python types to TypeScript types"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "build>=1.3.0",
+    "twine>=6.2.0",
+]
 
 
 
 [tool.hatch.version]
-path = "lib/__init__.py"
+path = "py_ts/__init__.py"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]

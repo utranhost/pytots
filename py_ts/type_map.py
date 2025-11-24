@@ -121,7 +121,9 @@ def map_typedDict_type(typed_dict, **extra) -> str:
     for field, field_type in get_type_hints(typed_dict).items():
         ts_type = map_base_type(field_type, **extra)
         
-        if field_type.__dict__.get('_name') == 'Optional':
+        # 检查是否为可选类型
+        origin = get_origin(field_type)
+        if origin is typing.Optional or (hasattr(field_type, '__dict__') and field_type.__dict__.get('_name') == 'Optional'):
             fields.append(f"{field}?: {ts_type};")
         else:
             fields.append(f"{field}: {ts_type};")

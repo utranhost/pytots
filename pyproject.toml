@@ -18,6 +18,11 @@ path = "lib/__init__.py"
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[dependency-groups]
+dev = [
+    "pytest>=9.0.1",
+]
+
 [tool.setuptools]
 packages = ["py_ts"]
 

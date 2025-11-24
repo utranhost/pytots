@@ -107,7 +107,9 @@ def convert_function_to_ts(func: Callable, **extra) -> str:
         if param != "return":
             ts_type = map_base_type(param_type, **extra)
             
-            if param_type.__dict__.get('_name') == 'Optional':
+            if param_type is Any:
+                parameters.append(f"{param}: any")
+            elif param_type.__dict__.get('_name') == 'Optional':
                 parameters.append(f"{param}?: {ts_type}")
             else:
                 parameters.append(f"{param}: {ts_type}")

@@ -1,6 +1,6 @@
 """
-函数和类转换示例
-展示py-ts对Python函数和类的TypeScript转换支持
+自引用和前置引用
+
 """
 
 from typing import TypedDict, Callable, Optional, List, Dict, Any, Union

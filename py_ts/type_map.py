@@ -213,6 +213,11 @@ def map_base_type(
     - TypeVar 类型。
     - TypedDict 类型。
     """
+    
+    # 判断是否为自引用
+    if python_type in __stack:
+        return f"{python_type.__name__}"
+    
     __stack.append(python_type)
     processer = {
         "process_newType": process_newType,

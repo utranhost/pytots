@@ -7,6 +7,20 @@ version = "0.3.0"
 description = "A lightweight tool that helps you convert Python types to TypeScript types"
 readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "MIT" }
+keywords = ["typescript", "python", "type-conversion", "pydantic", "sqlmodel"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Build Tools",
+]
 dependencies = []
 
 

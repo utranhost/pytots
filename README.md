@@ -38,24 +38,28 @@ pip install pytots
 
 ### 基本使用
 ```python
-from pytots import convert_to_ts, get_output_ts_str
+from pytots import convert_to_ts, get_output_ts_str, output_ts_file
+from typing import List, Dict, Optional
 
 # 转换Python类型为TypeScript
-result = convert_to_ts({
-    'name': str,
-    'age': int,
-    'is_active': bool
-})
+print("=== 基础类型转换演示 ===")
 
-print(result)
-# 输出: interface GeneratedInterface {
-#   name: string;
-#   age: number;
-#   is_active: boolean;
-# }
+# 基本类型
+print(f"str -> {convert_to_ts(str)}")        # string
+print(f"int -> {convert_to_ts(int)}")        # number
+print(f"bool -> {convert_to_ts(bool)}")      # boolean
 
-# 获取完整模块定义
-ts_code = get_output_ts_str("UserModule")
+# 容器类型
+print(f"List[int] -> {convert_to_ts(List[int])}")          # Array<number>
+print(f"Dict[str, int] -> {convert_to_ts(Dict[str, int])}") # Record<string, number>
+print(f"Optional[str] -> {convert_to_ts(Optional[str])}")   # string | null | undefined
+
+# 获取完整的TypeScript代码字符串
+ts_code = get_output_ts_str()
+print(ts_code)
+
+# 直接输出到文件
+output_ts_file("output/types.ts")
 ```
 
 ### Pydantic模型转换
@@ -175,27 +179,27 @@ pip install pytots
 
 ```python
 from pytots import convert_to_ts, get_output_ts_str, output_ts_file
+from typing import List, Dict, Optional
 
 # 基本类型转换
-result = convert_to_ts({
-    'name': str,
-    'age': int,
-    'is_active': bool
-})
+print("=== 基础类型转换演示 ===")
 
-print(result)
-# 输出: interface GeneratedInterface {
-#   name: string;
-#   age: number;
-#   is_active: boolean;
-# }
+# 基本类型
+print(f"str -> {convert_to_ts(str)}")        # string
+print(f"int -> {convert_to_ts(int)}")        # number
+print(f"bool -> {convert_to_ts(bool)}")      # boolean
+
+# 容器类型
+print(f"List[int] -> {convert_to_ts(List[int])}")          # Array<number>
+print(f"Dict[str, int] -> {convert_to_ts(Dict[str, int])}") # Record<string, number>
+print(f"Optional[str] -> {convert_to_ts(Optional[str])}")   # string | null | undefined
 
 # 获取完整的TypeScript代码字符串
-ts_code = get_output_ts_str("MyModule")
+ts_code = get_output_ts_str()
 print(ts_code)
 
 # 直接输出到文件
-output_ts_file("output/types.ts", "MyModule")
+output_ts_file("output/types.ts")
 ```
 
 ### 支持的类型示例
@@ -203,6 +207,7 @@ output_ts_file("output/types.ts", "MyModule")
 ```python
 from typing import TypedDict, NewType, TypeVar, Optional, List
 from dataclasses import dataclass
+from pytots import convert_to_ts, get_output_ts_str
 
 # TypedDict 转换
 class UserDict(TypedDict):
@@ -234,7 +239,7 @@ convert_to_ts(User)
 convert_to_ts(process_user)
 
 # 获取完整的TypeScript定义
-ts_code = get_output_ts_str("UserModule")
+ts_code = get_output_ts_str()
 print(ts_code)
 ```
 
@@ -245,8 +250,8 @@ pytots 提供了插件系统，可以扩展支持更多类型系统。
 ### Pydantic 支持
 
 ```python
-from pytots.plugin.plus import PydanticPlugin
-from pytots import use_plugin
+from pytots.plugin.plus.pydantic_plugin import PydanticPlugin
+from pytots import use_plugin, convert_to_ts, get_output_ts_str
 from pydantic import BaseModel, EmailStr
 
 # 启用Pydantic插件
@@ -260,15 +265,15 @@ class User(BaseModel):
 
 # 转换Pydantic模型
 convert_to_ts(User)
-ts_code = get_output_ts_str("PydanticModule")
+ts_code = get_output_ts_str()
 print(ts_code)
 ```
 
 ### SQLModel 支持
 
 ```python
-from pytots.plugin.plus import SqlModelPlugin
-from pytots import use_plugin
+from pytots.plugin.plus.sqlmodel_plugin import SqlModelPlugin
+from pytots import use_plugin, convert_to_ts, get_output_ts_str
 from sqlmodel import SQLModel, Field
 
 # 启用SQLModel插件
@@ -281,7 +286,7 @@ class User(SQLModel, table=True):
 
 # 转换SQLModel模型
 convert_to_ts(User)
-ts_code = get_output_ts_str("SQLModelModule")
+ts_code = get_output_ts_str()
 print(ts_code)
 ```
 

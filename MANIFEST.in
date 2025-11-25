@@ -1,0 +1,5 @@
+include pytots/example/*.py
+include pytots/plugin/*.py
+include pytots/plugin/plus/*.py
+recursive-include pytots/example *.py
+recursive-include pytots/plugin *.py

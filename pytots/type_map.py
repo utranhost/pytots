@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 from .clf import (
     ARRAY_TYPES_COLLECTION,
+    LITERAL_TYPES_COLLECTION,
     OPTIONAL_TYPES_COLLECTION,
     RECORD_TYPES_COLLECTION,
     SET_TYPES_COLLECTION,
@@ -109,6 +110,33 @@ def handle_callable_type(args: list[str]) -> str:
         return f"(...args:{args[0]}) => {args[1]}"
     else:
         raise ValueError("Callable type must have two arguments.")
+
+
+def handle_literal_type(args: list[Any]) -> str:
+    """
+    处理 Literal 类型。
+    将 Python 的 Literal 类型映射为 TypeScript 的联合类型。
+    """
+    if len(args) == 0:
+        return "never"
+    
+    # 处理 Literal 参数，确保字符串类型正确引用
+    literal_args = []
+    for arg in args:
+        if isinstance(arg, str):
+            # 字符串类型需要添加引号
+            literal_args.append(f"'{arg}'")
+        elif isinstance(arg, bool):
+            # 布尔值转为小写
+            literal_args.append(str(arg).lower())
+        elif isinstance(arg, (int, float)):
+            # 数字类型直接使用
+            literal_args.append(str(arg))
+        else:
+            # 其他类型尝试转换为字符串
+            literal_args.append(str(arg))
+    
+    return join_type_args(literal_args, " | ")
 
 
 def map_typedDict_type(typed_dict, **extra) -> str:
@@ -343,8 +371,8 @@ def map_base_type(
         __stack.pop()
         return res
 
-    if origin is typing.Literal:
-        res = join_type_args([repr(arg) for arg in arg_typpes], " | ")
+    if origin in LITERAL_TYPES_COLLECTION:  # 映射 Literal
+        res = handle_literal_type(args)
         __stack.pop()
         return res
 

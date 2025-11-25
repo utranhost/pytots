@@ -56,7 +56,9 @@ OPTIONAL_TYPES_COLLECTION = [
     typing.Optional,
 ]
 
-
+LITERAL_TYPES_COLLECTION = [
+    typing.Literal,
+]
 
 
 
@@ -70,4 +72,5 @@ __all__ = [
     "SET_TYPES_COLLECTION",
     "UNION_TYPES_COLLECTION",
     "OPTIONAL_TYPES_COLLECTION",
+    "LITERAL_TYPES_COLLECTION",
 ]

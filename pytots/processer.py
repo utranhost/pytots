@@ -11,7 +11,7 @@ from typing import (
     Callable,
     Final,
     ClassVar,
-    TypedDict
+    TypedDict,NewType
 )
 from dataclasses import is_dataclass
 from pytots.type_map import (
@@ -26,6 +26,21 @@ STORE_PROCESSED_NEWTYPE = {}
 STORE_PROCESSED_TYPEVAR = {}
 STORE_PROCESSED_TYPEDDICT = {}
 STORE_PROCESSED_MISSING = {}
+
+
+def store_missing_type(type_,type_name, content: str):
+    """
+    存储缺失的类型映射
+    """
+    STORE_PROCESSED_MISSING[type_name] = STORE_PROCESSED_MISSING.get(type_name,{})
+    STORE_PROCESSED_MISSING[type_name][type_] = content
+
+
+def exist_missing_type(type_) -> bool:
+    """
+    检查是否存在缺失的类型映射
+    """
+    return any(type_ in STORE_PROCESSED_MISSING[type_name] for type_name in STORE_PROCESSED_MISSING.keys())
 
 
 
@@ -65,7 +80,7 @@ def convert_newType_to_ts(new_type, **extra:'Extra') -> str:
     ```
     """
     ts_base_type = map_newType_type(new_type, **extra)
-    return f"type {new_type.__name__} = {ts_base_type}"  # type: ignore
+    return f"type {new_type.__name__} = {ts_base_type};"  # type: ignore
 
 
 def convert_typeVar_to_ts(new_type, **extra:'Extra') -> str:
@@ -82,7 +97,7 @@ def convert_typeVar_to_ts(new_type, **extra:'Extra') -> str:
     ```
     """
     ts_base_type = map_typeVar_type(new_type, **extra)
-    return f"type {new_type.__name__} = {ts_base_type}"
+    return f"type {new_type.__name__} = {ts_base_type};"
 
 
 def convert_dataclass_to_ts(cls: type, **extra:'Extra') -> str:
@@ -130,7 +145,7 @@ def convert_function_to_ts(func: Callable, **extra:'Extra') -> str:
     )
 
     params_str = ", ".join(parameters)
-    return f"function {func.__name__}({params_str}): {ts_return_type}"
+    return f"function {func.__name__}({params_str}): {ts_return_type};"
 
 
 
@@ -155,29 +170,29 @@ def process_typedDict(*stack: list[type], **processer) -> None:
 
 def process_missing(*stack: list[type], **processer) -> str | None:
     cur = stack[-1]
-    if any(cur == x for x in STORE_PROCESSED_MISSING.keys()):
+    if exist_missing_type(cur):
         return cur.__name__
 
     if inspect.isclass(cur) and is_dataclass(cur):  # 处理 dataclass
-        STORE_PROCESSED_MISSING[cur] = convert_dataclass_to_ts(cur, **processer)
+        store_missing_type(cur,'dataclass',convert_dataclass_to_ts(cur, **processer))
         return cur.__name__
 
     if inspect.isfunction(cur):  # 处理函数
-        STORE_PROCESSED_MISSING[cur] = convert_function_to_ts(cur, **processer)
+        store_missing_type(cur,'function',convert_function_to_ts(cur, **processer))
         return f"typeof {cur.__name__}"
     
     # 处理类方法
     if inspect.ismethod(cur):
-        STORE_PROCESSED_MISSING[cur] = convert_function_to_ts(cur, **processer)
+        store_missing_type(cur,'method',convert_function_to_ts(cur, **processer))
         return f"typeof {cur.__name__}"
     
     # 处理插件
     for plugin in PLUGINS:
         if (mapped_type := plugin.map_type(cur)) is not None:
-            STORE_PROCESSED_MISSING[cur] = mapped_type
+            # store_missing_type(cur,'map_type',mapped_type)
             return mapped_type
         if plugin.is_supported(cur):
-            STORE_PROCESSED_MISSING[cur] = plugin.converter(cur, **processer)
+            store_missing_type(cur,plugin.name,plugin.converter(cur, **processer))
             return cur.__name__
         
     return None

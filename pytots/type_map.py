@@ -1,23 +1,23 @@
-from collections import OrderedDict, defaultdict
-import types
+import typing
 from typing import (
     Any,
     TypeVar,
     get_type_hints,
-    Union,
-    Optional,
-    Literal,
     NewType,
-    TypedDict,
-    Protocol,
-    Final,
-    ClassVar,
-    Callable,
     get_origin,
     get_args,
+    TYPE_CHECKING,
 )
-import typing
-import inspect
+
+if TYPE_CHECKING:
+    from .processer import (
+        Extra,
+        Processers,
+        ProcessNewTypeFunc,
+        ProcessTypeVarFunc,
+        ProcessTypedDictFunc,
+        ProcessMissingFunc,
+    )
 
 
 from .clf import (
@@ -120,10 +120,13 @@ def map_typedDict_type(typed_dict, **extra) -> str:
     fields = []
     for field, field_type in get_type_hints(typed_dict).items():
         ts_type = map_base_type(field_type, **extra)
-        
+
         # 检查是否为可选类型
         origin = get_origin(field_type)
-        if origin is typing.Optional or (hasattr(field_type, '__dict__') and field_type.__dict__.get('_name') == 'Optional'):
+        if origin is typing.Optional or (
+            hasattr(field_type, "__dict__")
+            and field_type.__dict__.get("_name") == "Optional"
+        ):
             fields.append(f"{field}?: {ts_type};")
         else:
             fields.append(f"{field}: {ts_type};")
@@ -190,13 +193,13 @@ def map_typeVar_type(type_var, **extra) -> str:
 
 
 def map_base_type(
-    python_type,
+    python_type: Any,
     *,
     __stack: list[Any] = [],
-    process_newType: Optional[Callable[[], None]] = None,
-    process_typeVar: Optional[Callable[[], None]] = None,
-    process_typedDict: Optional[Callable[[], None]] = None,
-    process_missing: Optional[Callable[[], str]] = None,
+    process_newType: ProcessNewTypeFunc,
+    process_typeVar: ProcessTypeVarFunc,
+    process_typedDict: ProcessTypedDictFunc,
+    process_missing: ProcessMissingFunc,
 ) -> str:
     """
     基础类型映射
@@ -213,42 +216,40 @@ def map_base_type(
     - TypeVar 类型。
     - TypedDict 类型。
     """
-    
+
     # 判断是否为自引用
     if python_type in __stack:
         return f"{python_type.__name__}"
-    
+
     __stack.append(python_type)
-    processer = {
+    processer: "Processers" = {
         "process_newType": process_newType,
         "process_typeVar": process_typeVar,
         "process_typedDict": process_typedDict,
         "process_missing": process_missing,
     }
-    extra = {
+    extra: "Extra" = {
         "__stack": __stack,
         **processer,
     }
 
     if typing.is_typeddict(python_type):  # TypedDict 类型, 只返回名称
         if process_typedDict:
-            process_typedDict(*__stack,**processer)
+            process_typedDict(*__stack, **processer)
         __stack.pop()
         return python_type.__name__  # type: ignore
 
     if isinstance(python_type, NewType):  # 处理 NewType 类型，只返回名称
         if process_newType:
-            process_newType(*__stack,**processer)
+            process_newType(*__stack, **processer)
         __stack.pop()
         return python_type.__name__  # type: ignore
 
     if isinstance(python_type, TypeVar):  # 处理 TypeVar 类型，只返回名称
         if process_typeVar:
-            process_typeVar(*__stack,**processer)
+            process_typeVar(*__stack, **processer)
         __stack.pop()
         return python_type.__name__
-
-
 
     # 0.特殊实例处理
     if type(python_type) is str:  # 处理字符串,它是字面量
@@ -259,18 +260,16 @@ def map_base_type(
         res = handel_tuple_type([map_base_type(a, **extra) for a in python_type])
         __stack.pop()
         return res
-    
+
     if type(python_type) is list:
         res = handel_tuple_type([map_base_type(a, **extra) for a in python_type])
         __stack.pop()
         return res
 
-
     # 1.处理单一类型
     if any(python_type == x for x in SINGLE_TYPES_MAP.keys()):
         __stack.pop()
         return SINGLE_TYPES_MAP[python_type]  # type: ignore
-
 
     origin = get_origin(python_type)
     args = get_args(python_type)
@@ -312,7 +311,7 @@ def map_base_type(
         return res
 
     if origin is typing.Literal:
-        res = join_type_args([repr(arg) for arg in arg_typpes],' | ')
+        res = join_type_args([repr(arg) for arg in arg_typpes], " | ")
         __stack.pop()
         return res
 
@@ -323,7 +322,9 @@ def map_base_type(
         __stack.pop()
         return res
 
-    if process_missing and (res := process_missing(*__stack,**processer)):  # 处理未知类型
+    if process_missing and (
+        res := process_missing(*__stack, **processer)
+    ):  # 处理未知类型
         __stack.pop()
         if type(res) is str:
             return res

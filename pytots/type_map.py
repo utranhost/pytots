@@ -146,6 +146,16 @@ def map_newType_type(new_type, **extra) -> str:
     ts_base_type = map_base_type(base_type, **extra)
     return ts_base_type
 
+def map_type_alias_type(type_alias, **extra) -> str:
+    """
+    映射 Python 中的 TypeAlias
+    """
+    if not isinstance(type_alias, typing.TypeAlias):
+        raise TypeError("The argument must be a TypeAlias.")
+
+    base_type = type_alias.__supertype__
+    ts_base_type = map_base_type(base_type, **extra)
+    return ts_base_type
 
 def map_typeVar_type(type_var, **extra) -> str:
     """
@@ -338,5 +348,6 @@ __all__ = [
     "map_base_type",
     "map_typedDict_type",
     "map_newType_type",
+    "map_type_alias_type",
     "map_typeVar_type",
 ]

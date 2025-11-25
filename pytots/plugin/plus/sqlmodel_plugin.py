@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Literal, TypedDict
 from .. import Plugin,use_plugin
 from ..plus.pydantic_plugin import PydanticPlugin
 
@@ -30,7 +30,7 @@ from sqlmodel import (
 class SqlModelPluginOptions(TypedDict):
     """SQLModel 插件选项"""
     exclude: bool    # 是否排除被标记为 exclude 的字段
-
+    type_prefix: Literal["interface", "type"]
 
 class SqlModelPlugin(Plugin):
     """SQLModel 插件"""
@@ -59,6 +59,7 @@ class SqlModelPlugin(Plugin):
     
     def __init__(self, options: SqlModelPluginOptions={}) -> None:
         self.options = options
+        self.type_prefix = options.get("type_prefix", "interface")
         use_plugin(PydanticPlugin(options))
 
     def converter(self, python_type: type, **extra) -> str:
@@ -84,9 +85,12 @@ class SqlModelPlugin(Plugin):
                 fields.append(f"{field_name}: {ts_type};")
             else:
                 fields.append(f"{field_name}?: {ts_type};")
-
+        
         fields_str = "\n  ".join(fields)
-        return f"{{\n  {fields_str}\n  }}"
+        if self.type_prefix == "type":
+            return f"{self.type_prefix} {python_type.__name__} = {{\n  {fields_str}\n}}"
+        else:
+            return f"{self.type_prefix} {python_type.__name__} {{\n  {fields_str}\n}}"
 
 
     def is_supported(self, python_type: type) -> bool:

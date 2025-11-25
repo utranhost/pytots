@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Literal, TypedDict
 from .. import Plugin
 from pytots.type_map import map_base_type
 
@@ -47,6 +47,8 @@ from pydantic import (
 class PydanticPluginOptions(TypedDict):
     """Pydantic 插件选项"""
     exclude: bool    # 是否排除被标记为 exclude 的字段
+    type_prefix: Literal["interface", "type"]
+
 
 
 class PydanticPlugin(Plugin):
@@ -94,7 +96,8 @@ class PydanticPlugin(Plugin):
     
     def __init__(self, options: PydanticPluginOptions={}) -> None:
         self.options = options
-
+        self.type_prefix = options.get("type_prefix", "interface")
+        
     def converter(self, python_type: type, **extra) -> str:
         """类型转换"""
         fields = []
@@ -119,7 +122,10 @@ class PydanticPlugin(Plugin):
                 fields.append(f"{field_name}?: {ts_type};")
 
         fields_str = "\n  ".join(fields)
-        return f"{{\n  {fields_str}\n  }}"
+        if self.type_prefix == "type":
+            return f"{self.type_prefix} {python_type.__name__} = {{\n  {fields_str}\n}}"
+        else:
+            return f"{self.type_prefix} {python_type.__name__} {{\n  {fields_str}\n}}"
 
     def is_supported(self, type_: type) -> bool:
         """是否支持该类型"""

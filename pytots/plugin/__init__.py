@@ -5,7 +5,13 @@ from abc import ABC, abstractmethod
 class Plugin(ABC):
     """插件基类"""
     
+    # 插件名称
     name: str = "pytots-plugin"
+    
+    # 类型前缀
+    type_prefix: str = "interface"
+    
+    
     # 类型映射表
     TYPES_MAP: dict[type|str, str] = {}
     

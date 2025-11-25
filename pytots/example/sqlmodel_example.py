@@ -5,7 +5,7 @@ SQLModel 类型转换示例
 
 from datetime import datetime
 from typing import Optional, List
-from pytots import convert_to_ts, get_output_ts_str, reset_store
+from pytots import convert_to_ts, get_output_ts_str, reset_store, output_ts_file
 
 # 插件注册
 from pytots.plugin import use_plugin
@@ -14,7 +14,7 @@ from pytots.plugin.plus.sqlmodel_plugin import SqlModelPlugin
 use_plugin(SqlModelPlugin())
 
 import os
-current_dir = os.path.dirname(os.path.abspath(__file__))
+output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'test_ts_output')
 
 def sqlmodel_types_demo():
     """SQLModel 类型转换演示"""
@@ -70,6 +70,8 @@ def sqlmodel_types_demo():
     print(f"Order 模型 -> {convert_to_ts(Order)}")
     res = get_output_ts_str()
     print(res)
+    path = os.path.join(output_dir, "test_sqlmodel.ts")
+    output_ts_file(path, None)
     reset_store()
 
 
@@ -149,6 +151,8 @@ def advanced_sqlmodel_demo():
 
     res = get_output_ts_str()
     print(res)
+    path = os.path.join(output_dir, "test_advanced_sqlmodel.ts")
+    output_ts_file(path, None)
     reset_store()
 
 
@@ -181,6 +185,8 @@ def generate_sqlmodel_ts_file():
 
     res = get_output_ts_str()
     print(res)
+    path = os.path.join(output_dir, "test_sqlmodel_advanced.ts")
+    output_ts_file(path, None)
     reset_store()
 
 

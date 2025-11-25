@@ -14,7 +14,7 @@ from pytots.plugin.plus.pydantic_plugin import PydanticPlugin
 use_plugin(PydanticPlugin())
 
 import os
-current_dir = os.path.dirname(os.path.abspath(__file__))
+output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'test_ts_output')
 
 
 
@@ -69,7 +69,7 @@ def pydantic_types_demo():
     print("\n4. 嵌套 Pydantic 模型:")
     print(f"Order 模型 -> {convert_to_ts(Order)}")
     
-    path = os.path.join(current_dir, "pydantic_order_models.ts")
+    path = os.path.join(output_dir, "pydantic_order_models.ts")
     output_ts_file(path)
     reset_store()
 
@@ -106,7 +106,7 @@ def advanced_pydantic_demo():
     print("\n2. 联合类型的 Pydantic 模型:")
     print(f"Organism 模型 -> {convert_to_ts(Organism)}")
     
-    path = os.path.join(current_dir, "pydantic_organism_models.ts")
+    path = os.path.join(output_dir, "pydantic_organism_models.ts")
     output_ts_file(path)
     reset_store()
 
@@ -136,7 +136,7 @@ def generate_pydantic_ts_file():
     print(ts_content)
     
     
-    path = os.path.join(current_dir, "pydantic_member_models.ts")
+    path = os.path.join(output_dir, "pydantic_member_models.ts")
     output_ts_file(path)
     reset_store()
 

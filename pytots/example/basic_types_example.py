@@ -6,6 +6,9 @@
 from typing import Any, Union, Optional, List, Dict, Tuple, Set
 from pytots import convert_to_ts, get_output_ts_str, output_ts_file
 
+import os
+output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'test_ts_output')
+
 
 def basic_types_demo():
     """基础类型转换演示"""
@@ -63,6 +66,11 @@ if __name__ == "__main__":
     """运行所有演示"""
     basic_types_demo()
     complex_types_demo()
+    
+    res = get_output_ts_str()
+    print(res)
+    path = os.path.join(output_dir, "test_basic_types.ts")
+    output_ts_file(path, None)
     
     print("\n=== 演示完成 ===")
     print("请查看生成的文件: basic_types.ts")

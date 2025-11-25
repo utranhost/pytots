@@ -7,6 +7,8 @@ from typing import TypedDict, Callable, Optional, List, Dict, Any, Union
 from dataclasses import dataclass, field
 from pytots import convert_to_ts, get_output_ts_str, output_ts_file, reset_store
 
+import os
+output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'test_ts_output')
 
 @dataclass
 class Team:
@@ -32,6 +34,8 @@ convert_to_ts(Team)
 res = get_output_ts_str(None)
 print("类前置引用转换完成")
 print(res)
+path = os.path.join(output_dir, "test_circular_reference.ts")
+output_ts_file(path, None)
 reset_store()
     
 
@@ -67,6 +71,8 @@ convert_to_ts(Employee)
 res = get_output_ts_str(None)
 print("类的嵌套和自引用转换完成")
 print(res)
+path = os.path.join(output_dir, "test_nested_self_reference.ts")
+output_ts_file(path, None)
 reset_store()
 
 
@@ -132,6 +138,8 @@ convert_to_ts(error_boundary)
 res = get_output_ts_str(None)
 print("回调模式转换完成")
 print(res)
+path = os.path.join(output_dir, "test_callback_pattern.ts")
+output_ts_file(path, None)
 reset_store()
 
 
@@ -152,4 +160,6 @@ convert_to_ts(deep_copy)
 res = get_output_ts_str(None)
 print("工具函数转换完成")
 print(res)
+path = os.path.join(output_dir, "test_util_functions.ts")
+output_ts_file(path, None)
 reset_store()

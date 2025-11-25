@@ -91,6 +91,12 @@ def output_ts_file(
         module_name: 模块名，默认值为 "PytsDemo", 当为 None 时，输出不添加模块声明。
         format: 是否格式化输出，默认值为 True
     """
+
+    import os
+    # 判断目录是否存储在,不存在则创建
+    if not os.path.exists(os.path.dirname(file_path)):
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    
     with open(file_path, "w", encoding="utf-8") as f:
         result = get_output_ts_str(module_name, format)
         f.write(result)

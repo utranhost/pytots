@@ -14,7 +14,7 @@ from pytots import convert_to_ts, get_output_ts_str, output_ts_file, reset_store
 
 
 import os
-current_dir = os.path.dirname(os.path.abspath(__file__))
+output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'test_ts_output')
 
 
 
@@ -70,7 +70,7 @@ def typed_dict_demo():
     print("TypedDict类型已转换完成")
     res = get_output_ts_str(None)
     print(res)
-    path = os.path.join(current_dir, "test_typed_dict.ts")
+    path = os.path.join(output_dir, "test_typed_dict.ts")
     output_ts_file(path, None)
     reset_store()
 
@@ -99,7 +99,7 @@ def new_type_demo():
     
     print("NewType类型已转换完成")
     print(res)
-    path = os.path.join(current_dir, "test_new_type.ts")
+    path = os.path.join(output_dir, "test_new_type.ts")
     output_ts_file(path, None)
     reset_store()
 
@@ -130,7 +130,7 @@ def type_var_demo():
     res = get_output_ts_str(None)
     print("TypeVar类型已转换完成")
     print(res)
-    path = os.path.join(current_dir, "test_type_var.ts")
+    path = os.path.join(output_dir, "test_type_var.ts")
     output_ts_file(path, None)
     reset_store()
 
@@ -170,7 +170,7 @@ def dataclass_demo():
     res = get_output_ts_str(None)
     print("dataclass类型已转换完成")
     print(res)
-    path = os.path.join(current_dir, "test_dataclass.ts")
+    path = os.path.join(output_dir, "test_dataclass.ts")
     output_ts_file(path, None)
     reset_store()
 
@@ -205,7 +205,7 @@ def function_demo():
     res = get_output_ts_str(None)
     print("函数类型已转换完成")
     print(res)
-    path = os.path.join(current_dir, "test_function.ts")
+    path = os.path.join(output_dir, "test_function.ts")
     output_ts_file(path, None)
     reset_store()
 
@@ -245,7 +245,7 @@ def integration_demo():
     res = get_output_ts_str(None)
     print("集成类型已转换完成")
     print(res)
-    path = os.path.join(current_dir, "test_integration.ts")
+    path = os.path.join(output_dir, "test_integration.ts")
     output_ts_file(path, None)
     reset_store()
 
@@ -285,7 +285,7 @@ def output_advanced_types():
     print(ts_code)
     
     # 输出到文件
-    path = os.path.join(current_dir, "advanced_types.ts")
+    path = os.path.join(output_dir, "advanced_types.ts")
     output_ts_file(path, "AdvancedTypes")
 
 
@@ -301,4 +301,3 @@ if __name__ == "__main__":
     output_advanced_types()
     
     print("\n=== 高级类型演示完成 ===")
-    print("请查看生成的文件: advanced_types.ts")

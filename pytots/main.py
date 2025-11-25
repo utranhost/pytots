@@ -12,14 +12,6 @@ from pytots.processer import (
 )
 
 
-# 插件注册
-from pytots.plugin import register_plugin
-from pytots.plugin.pydantic_plugin import PydanticPlugin
-from pytots.plugin.sqlmodel_plugin import SqlModelPlugin
-
-register_plugin(PydanticPlugin())
-register_plugin(SqlModelPlugin())
-
 
 def convert_to_ts(obj) -> str:
     """

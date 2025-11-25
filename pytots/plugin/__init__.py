@@ -29,7 +29,10 @@ class Plugin(ABC):
 PLUGINS: list[Plugin] = []  # 插件列表
 
 
-def register_plugin(plugin: Plugin):
+def use_plugin(plugin: Plugin):
     """注册插件"""
+    if not isinstance(plugin, Plugin):
+        raise TypeError(f"非法插件 {plugin.__class__.__name__}, 必须继承自Plugin类")
+    
     PLUGINS.append(plugin)
     print(f"插件 {plugin.__class__.__name__} 已注册")

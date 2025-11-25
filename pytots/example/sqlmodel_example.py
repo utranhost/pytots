@@ -7,6 +7,12 @@ from datetime import datetime
 from typing import Optional, List
 from pytots import convert_to_ts, get_output_ts_str, reset_store
 
+# 插件注册
+from pytots.plugin import use_plugin
+from pytots.plugin.plus.sqlmodel_plugin import SqlModelPlugin
+
+use_plugin(SqlModelPlugin())
+
 
 def sqlmodel_types_demo():
     """SQLModel 类型转换演示"""

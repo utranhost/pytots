@@ -196,10 +196,10 @@ def map_base_type(
     python_type: Any,
     *,
     __stack: list[Any] = [],
-    process_newType: ProcessNewTypeFunc,
-    process_typeVar: ProcessTypeVarFunc,
-    process_typedDict: ProcessTypedDictFunc,
-    process_missing: ProcessMissingFunc,
+    process_newType: 'ProcessNewTypeFunc',
+    process_typeVar: 'ProcessTypeVarFunc',
+    process_typedDict: 'ProcessTypedDictFunc',
+    process_missing: 'ProcessMissingFunc',
 ) -> str:
     """
     基础类型映射

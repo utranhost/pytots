@@ -4,7 +4,17 @@ Pydantic 类型转换示例
 """
 
 from typing import Optional, List, Dict, Any
-from pytots import convert_to_ts, get_output_ts_str, output_ts_file
+from pytots import convert_to_ts, get_output_ts_str
+
+
+# 插件注册
+from pytots.plugin import use_plugin
+from pytots.plugin.plus.pydantic_plugin import PydanticPlugin
+
+use_plugin(PydanticPlugin())
+
+
+
 
 
 def pydantic_types_demo():

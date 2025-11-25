@@ -11,7 +11,7 @@ from .main import (
 )
 
 
-from .plugin import Plugin, register_plugin
+from .plugin import Plugin, use_plugin
 
 # 导出主要功能
 __all__ = [
@@ -26,5 +26,5 @@ __all__ = [
     "reset_store",
     
     "Plugin",
-    "register_plugin",
+    "use_plugin",
 ]

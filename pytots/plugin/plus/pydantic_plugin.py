@@ -1,4 +1,5 @@
-from . import Plugin
+from typing import TypedDict
+from .. import Plugin
 from pytots.type_map import map_base_type
 
 from pydantic import (
@@ -40,6 +41,12 @@ from pydantic import (
     NatsDsn,
     validate_email,
 )
+
+
+
+class PydanticPluginOptions(TypedDict):
+    """Pydantic 插件选项"""
+    exclude: bool    # 是否排除被标记为 exclude 的字段
 
 
 class PydanticPlugin(Plugin):
@@ -84,6 +91,9 @@ class PydanticPlugin(Plugin):
         NatsDsn: "string",
         validate_email: "string",
     }
+    
+    def __init__(self, options: PydanticPluginOptions={}) -> None:
+        self.options = options
 
     def converter(self, python_type: type, **extra) -> str:
         """类型转换"""
@@ -94,9 +104,14 @@ class PydanticPlugin(Plugin):
             if field_type is None:
                 # 如果注解为空，尝试从字段信息中获取类型
                 field_type = field_info
-
+                
+            # 检查是否排除被标记为 exclude 的字段
+            if self.options.get("exclude", False) and field_info.exclude:
+                continue
+            
             ts_type = map_base_type(field_type, **extra)
-            exclude = field_info.exclude
+
+
             # 检查是否为可选字段
             if field_info.is_required():
                 fields.append(f"{field_name}: {ts_type};")

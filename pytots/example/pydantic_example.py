@@ -4,7 +4,7 @@ Pydantic 类型转换示例
 """
 
 from typing import Optional, List, Dict, Any
-from pytots import convert_to_ts, get_output_ts_str
+from pytots import convert_to_ts, get_output_ts_str, output_ts_file, reset_store
 
 
 # 插件注册
@@ -13,7 +13,8 @@ from pytots.plugin.plus.pydantic_plugin import PydanticPlugin
 
 use_plugin(PydanticPlugin())
 
-
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 
@@ -43,6 +44,7 @@ def pydantic_types_demo():
     print(f"HttpUrl -> {convert_to_ts(HttpUrl)}")          # string
     print(f"IPvAnyAddress -> {convert_to_ts(IPvAnyAddress)}") # string
     
+    
     # 复杂 Pydantic 类型
     class Product(BaseModel):
         id: int
@@ -66,7 +68,10 @@ def pydantic_types_demo():
         
     print("\n4. 嵌套 Pydantic 模型:")
     print(f"Order 模型 -> {convert_to_ts(Order)}")
-
+    
+    path = os.path.join(current_dir, "pydantic_order_models.ts")
+    output_ts_file(path)
+    reset_store()
 
 def advanced_pydantic_demo():
     """高级 Pydantic 功能演示"""
@@ -100,6 +105,10 @@ def advanced_pydantic_demo():
         
     print("\n2. 联合类型的 Pydantic 模型:")
     print(f"Organism 模型 -> {convert_to_ts(Organism)}")
+    
+    path = os.path.join(current_dir, "pydantic_organism_models.ts")
+    output_ts_file(path)
+    reset_store()
 
 
 def generate_pydantic_ts_file():
@@ -126,6 +135,10 @@ def generate_pydantic_ts_file():
     print("\n生成的 TypeScript 内容:")
     print(ts_content)
     
+    
+    path = os.path.join(current_dir, "pydantic_member_models.ts")
+    output_ts_file(path)
+    reset_store()
 
 
 if __name__ == "__main__":

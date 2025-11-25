@@ -13,6 +13,8 @@ from pytots.plugin.plus.sqlmodel_plugin import SqlModelPlugin
 
 use_plugin(SqlModelPlugin())
 
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
 def sqlmodel_types_demo():
     """SQLModel 类型转换演示"""

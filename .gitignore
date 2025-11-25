@@ -11,3 +11,7 @@ wheels/
 
 uv.lock
 .trae/*
+
+# TypeScript files
+*.ts
+*.d.ts

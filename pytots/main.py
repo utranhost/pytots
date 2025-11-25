@@ -4,10 +4,12 @@ from pytots.processer import (
     process_newType,
     process_typeVar,
     process_typedDict,
+    process_enum,
     process_missing,
     STORE_PROCESSED_NEWTYPE,
     STORE_PROCESSED_TYPEVAR,
     STORE_PROCESSED_TYPEDDICT,
+    STORE_PROCESSED_ENUM,
     STORE_PROCESSED_MISSING,
 )
 from pytots.formart import TypeScriptFormatter
@@ -24,6 +26,7 @@ def convert_to_ts(obj) -> str:
         "process_newType": process_newType,
         "process_typeVar": process_typeVar,
         "process_typedDict": process_typedDict,
+        "process_enum": process_enum,
         "process_missing": process_missing,
     }
     return map_base_type(obj, **processer)
@@ -46,6 +49,7 @@ def get_output_ts_str(
         *STORE_PROCESSED_NEWTYPE.values(),
         *STORE_PROCESSED_TYPEVAR.values(),
         *STORE_PROCESSED_TYPEDDICT.values(),
+        *STORE_PROCESSED_ENUM.values(),
     ]
 
     # 生成原始 TypeScript 代码
@@ -109,4 +113,5 @@ def reset_store() -> None:
     STORE_PROCESSED_NEWTYPE.clear()
     STORE_PROCESSED_TYPEVAR.clear()
     STORE_PROCESSED_TYPEDDICT.clear()
+    STORE_PROCESSED_ENUM.clear()
     STORE_PROCESSED_MISSING.clear()

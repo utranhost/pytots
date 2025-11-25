@@ -16,6 +16,7 @@ if TYPE_CHECKING:
         ProcessNewTypeFunc,
         ProcessTypeVarFunc,
         ProcessTypedDictFunc,
+        ProcessEnumFunc,
         ProcessMissingFunc,
     )
 
@@ -174,6 +175,26 @@ def map_typeVar_type(type_var, **extra) -> str:
     return "any"
 
 
+def map_enum_type(enum_type, **extra) -> str:
+    """
+    映射 Python 中的枚举类型
+    """
+    import enum
+    if not isinstance(enum_type, type) or not issubclass(enum_type, enum.Enum):
+        raise TypeError("The argument must be an Enum class.")
+    
+    # 获取枚举成员
+    members = []
+    for member in enum_type:
+        if isinstance(member.value, str):
+            members.append(f"{member.name} = '{member.value}'")
+        else:
+            members.append(f"{member.name} = {member.value}")
+    
+    members_str = ",\n  ".join(members)
+    return f"enum {enum_type.__name__} {{\n  {members_str},\n}}"
+
+
 # # 原始复合类型
 # ORIGIN_COMPOSITE_TYPES_MAP = {
 #     list: "Array",
@@ -209,6 +230,7 @@ def map_base_type(
     process_newType: 'ProcessNewTypeFunc',
     process_typeVar: 'ProcessTypeVarFunc',
     process_typedDict: 'ProcessTypedDictFunc',
+    process_enum: 'ProcessEnumFunc',
     process_missing: 'ProcessMissingFunc',
 ) -> str:
     """
@@ -236,6 +258,7 @@ def map_base_type(
         "process_newType": process_newType,
         "process_typeVar": process_typeVar,
         "process_typedDict": process_typedDict,
+        "process_enum": process_enum,
         "process_missing": process_missing,
     }
     extra: "Extra" = {
@@ -350,4 +373,5 @@ __all__ = [
     "map_newType_type",
     "map_type_alias_type",
     "map_typeVar_type",
+    "map_enum_type",
 ]

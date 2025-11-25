@@ -13,6 +13,7 @@
 - **基础类型映射**: `str` → `string`, `int/float` → `number`, `bool` → `boolean`
 - **容器类型支持**: `List[T]`, `Dict[K, V]`, `Set[T]`, `Tuple[...]`
 - **高级类型处理**: `Union`, `Optional`, `Literal`, `TypedDict`
+- **枚举类型支持**: Python `enum.Enum` → TypeScript `enum`
 - **自定义类型**: `NewType`, `TypeVar`, 用户定义类
 
 ### 🧩 插件生态系统
@@ -40,6 +41,7 @@ pip install pytots
 ```python
 from pytots import convert_to_ts, get_output_ts_str, output_ts_file
 from typing import List, Dict, Optional
+import enum
 
 # 转换Python类型为TypeScript
 print("=== 基础类型转换演示 ===")
@@ -53,6 +55,20 @@ print(f"bool -> {convert_to_ts(bool)}")      # boolean
 print(f"List[int] -> {convert_to_ts(List[int])}")          # Array<number>
 print(f"Dict[str, int] -> {convert_to_ts(Dict[str, int])}") # Record<string, number>
 print(f"Optional[str] -> {convert_to_ts(Optional[str])}")   # string | null | undefined
+
+# 枚举类型
+class Color(enum.Enum):
+    RED = 1
+    GREEN = 2
+    BLUE = 3
+
+class Status(enum.Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+print(f"Color enum -> {convert_to_ts(Color)}")  # enum Color { RED = 1, GREEN = 2, BLUE = 3 }
+print(f"Status enum -> {convert_to_ts(Status)}") # enum Status { PENDING = 'pending', ... }
 
 # 获取完整的TypeScript代码字符串
 ts_code = get_output_ts_str()
@@ -91,6 +107,7 @@ convert_to_ts(User)
 | `Dict[K, V]` | `Record<K, V>` | `data: Record<string, number>` |
 | `Optional[T]` | `T \| null` | `email?: string \| null` |
 | `Union[T, U]` | `T \| U` | `status: 'active' \| 'inactive'` |
+| `enum.Enum` | `enum` | `enum Color { RED = 1, GREEN = 2, BLUE = 3 }` |
 
 ## 🎯 使用场景
 

@@ -1,7 +1,7 @@
 """
 处理器和转换器函数
 """
-
+import enum
 import inspect
 from typing import (
     Any,
@@ -19,12 +19,14 @@ from pytots.type_map import (
     map_typedDict_type,
     map_newType_type,
     map_typeVar_type,
+    map_enum_type,
 )
 from pytots.plugin import PLUGINS
 
 STORE_PROCESSED_NEWTYPE = {}
 STORE_PROCESSED_TYPEVAR = {}
 STORE_PROCESSED_TYPEDDICT = {}
+STORE_PROCESSED_ENUM = {}
 STORE_PROCESSED_MISSING = {}
 
 
@@ -100,6 +102,27 @@ def convert_typeVar_to_ts(new_type, **extra:'Extra') -> str:
     return f"type {new_type.__name__} = {ts_base_type};"
 
 
+def convert_enum_to_ts(enum_type, **extra:'Extra') -> str:
+    """
+    将 Python 中的枚举类型转换为 TypeScript 的 enum 定义。
+    #### 示例:
+    ```# python
+    class Color(Enum):
+        RED = 1
+        GREEN = 2
+        BLUE = 3
+    ```
+
+    ```# typescript
+    enum Color {
+      RED = 1,
+      GREEN = 2,
+      BLUE = 3
+    }
+    """
+    return map_enum_type(enum_type, **extra)
+
+
 def convert_dataclass_to_ts(cls: type, **extra:'Extra') -> str:
     """
     将 Python 类转换为 TypeScript 的 interface 定义。
@@ -168,9 +191,21 @@ def process_typedDict(*stack: list[type], **processer) -> None:
         STORE_PROCESSED_TYPEDDICT[cur] = convert_typedDict_to_ts(cur, **processer)
 
 
+def process_enum(*stack: list[type], **processer) -> None:
+    cur = stack[-1]
+    if all(cur != x for x in STORE_PROCESSED_ENUM.keys()):
+        STORE_PROCESSED_ENUM[cur] = convert_enum_to_ts(cur, **processer)
+
+
 def process_missing(*stack: list[type], **processer) -> str | None:
     cur = stack[-1]
     if exist_missing_type(cur):
+        return cur.__name__
+
+    # 处理枚举类型
+    
+    if inspect.isclass(cur) and issubclass(cur, enum.Enum):
+        store_missing_type(cur,'enum',convert_enum_to_ts(cur, **processer))
         return cur.__name__
 
     if inspect.isclass(cur) and is_dataclass(cur):  # 处理 dataclass
@@ -209,6 +244,7 @@ def process_missing(*stack: list[type], **processer) -> str | None:
 ProcessNewTypeFunc = Callable[[list[Any], 'Processers'], None]
 ProcessTypeVarFunc = Callable[[list[Any], 'Processers'], None]
 ProcessTypedDictFunc = Callable[[list[Any], 'Processers'], None]
+ProcessEnumFunc = Callable[[list[Any], 'Processers'], None]
 ProcessMissingFunc = Callable[[list[Any], 'Processers'], str | None]
 
 class Processers(TypedDict):
@@ -216,6 +252,7 @@ class Processers(TypedDict):
     process_newType: ProcessNewTypeFunc
     process_typeVar: ProcessTypeVarFunc
     process_typedDict: ProcessTypedDictFunc
+    process_enum: ProcessEnumFunc
     process_missing: ProcessMissingFunc
 
 

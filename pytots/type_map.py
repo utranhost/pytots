@@ -316,6 +316,17 @@ def map_base_type(
     if type(python_type) is str:  # 处理字符串,它是字面量
         __stack.pop()
         return python_type
+    
+    
+    if type(python_type) in [int,float]:  # 处理数字,它是字面量
+        __stack.pop()
+        return python_type
+    
+    
+    if type(python_type) is typing.Any:  # 处理 Any 类型
+        __stack.pop()
+        return "any"
+    
 
     if type(python_type) is tuple:  # 处理元组
         res = handel_tuple_type([map_base_type(a, **extra) for a in python_type])

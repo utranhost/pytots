@@ -14,7 +14,7 @@ from .clf import (
     replaceable_type_map,
 )
 
-from .plugin import Plugin, use_plugin
+from .plugin import Plugin, use_plugin, override_plugin
 
 # 导出主要功能
 __all__ = [
@@ -24,5 +24,6 @@ __all__ = [
     "reset_store",
     "Plugin",
     "use_plugin",
+    "override_plugin",
     "replaceable_type_map",
 ]

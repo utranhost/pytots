@@ -1,8 +1,10 @@
 """
 处理器和转换器函数
 """
+
 import enum
 import inspect
+import typing
 from typing import (
     Any,
     get_type_hints,
@@ -11,7 +13,8 @@ from typing import (
     Callable,
     Final,
     ClassVar,
-    TypedDict,NewType
+    TypedDict,
+    NewType,
 )
 from dataclasses import is_dataclass
 from pytots.type_map import (
@@ -22,19 +25,20 @@ from pytots.type_map import (
     map_enum_type,
 )
 from pytots.plugin import PLUGINS
+from pytots.store import (
+    STORE_PROCESSED_TYPEVAR,
+    STORE_PROCESSED_NEWTYPE,
+    STORE_PROCESSED_TYPEDDICT,
+    STORE_PROCESSED_ENUM,
+    STORE_PROCESSED_MISSING,
+)
 
-STORE_PROCESSED_NEWTYPE = {}
-STORE_PROCESSED_TYPEVAR = {}
-STORE_PROCESSED_TYPEDDICT = {}
-STORE_PROCESSED_ENUM = {}
-STORE_PROCESSED_MISSING = {}
 
-
-def store_missing_type(type_,type_name, content: str):
+def store_missing_type(type_, type_name, content: str):
     """
     存储缺失的类型映射
     """
-    STORE_PROCESSED_MISSING[type_name] = STORE_PROCESSED_MISSING.get(type_name,{})
+    STORE_PROCESSED_MISSING[type_name] = STORE_PROCESSED_MISSING.get(type_name, {})
     STORE_PROCESSED_MISSING[type_name][type_] = content
 
 
@@ -42,11 +46,13 @@ def exist_missing_type(type_) -> bool:
     """
     检查是否存在缺失的类型映射
     """
-    return any(type_ in STORE_PROCESSED_MISSING[type_name] for type_name in STORE_PROCESSED_MISSING.keys())
+    return any(
+        type_ in STORE_PROCESSED_MISSING[type_name]
+        for type_name in STORE_PROCESSED_MISSING.keys()
+    )
 
 
-
-def convert_typedDict_to_ts(typed_dict, **extra: 'Extra') -> str:
+def convert_typedDict_to_ts(typed_dict, **extra: "Extra") -> str:
     """
     将 Python 的 TypedDict 转换为 TypeScript 的 interface 定义。
 
@@ -68,7 +74,7 @@ def convert_typedDict_to_ts(typed_dict, **extra: 'Extra') -> str:
     return f"interface {typed_dict.__name__}\n  {fields_str}\n"
 
 
-def convert_newType_to_ts(new_type, **extra:'Extra') -> str:
+def convert_newType_to_ts(new_type, **extra: "Extra") -> str:
     """
     将 Python 中的 NewType 转换为 TypeScript 的类型别名。
 
@@ -85,24 +91,44 @@ def convert_newType_to_ts(new_type, **extra:'Extra') -> str:
     return f"type {new_type.__name__} = {ts_base_type};"  # type: ignore
 
 
-def convert_typeVar_to_ts(new_type, **extra:'Extra') -> str:
+def convert_typeVar_to_ts(new_type, **extra: "Extra") -> str:
     """
     将 Python 中的 TypeVar 转换为 TypeScript 的类型变量。
     #### 示例:
     ```# python
     T = TypeVar("T", bound=(int|str))  #  T = TypeVar("T", str, int)
     ```
-
+    输出：
     ```# typescript
-    type T = number | string
-    # T extends number | string
+    T extends number | string
+    # type T = number | string   (废弃)
     ```
     """
     ts_base_type = map_typeVar_type(new_type, **extra)
-    return f"type {new_type.__name__} = {ts_base_type};"
+    return f"{new_type.__name__} extends {ts_base_type}"
 
 
-def convert_enum_to_ts(enum_type, **extra:'Extra') -> str:
+# def convert_generic_to_ts(generic_type, **extra: "Extra") -> str:
+#     """
+#     将 Python 中的 Generic 类型转换为 TypeScript 的类型参数。
+#     #### 示例:
+#     ```# python
+#     class QueryResult(Generic[T]):
+#         data: Array[T]
+#         total_count: number
+#     ```
+#     输出：
+#     ```# typescript
+#     interface QueryResult<T> {
+#       data: Array<T>;
+#       total_count: number;
+#     }
+#     ```
+#     """
+#     return map_generic_type(generic_type, **extra)
+
+
+def convert_enum_to_ts(enum_type, **extra: "Extra") -> str:
     """
     将 Python 中的枚举类型转换为 TypeScript 的 enum 定义。
     #### 示例:
@@ -123,7 +149,7 @@ def convert_enum_to_ts(enum_type, **extra:'Extra') -> str:
     return map_enum_type(enum_type, **extra)
 
 
-def convert_dataclass_to_ts(cls: type, **extra:'Extra') -> str:
+def convert_dataclass_to_ts(cls: type, **extra: "Extra") -> str:
     """
     将 Python 类转换为 TypeScript 的 interface 定义。
     """
@@ -135,8 +161,8 @@ def convert_dataclass_to_ts(cls: type, **extra:'Extra') -> str:
         if get_origin(field_type) in [Final, ClassVar]:
             field_type = get_args(field_type)[0]  # 获取 Final 或 ClassVar 的原始类型
         ts_type = map_base_type(field_type, **extra)
-        
-        if field_type.__dict__.get('_name') == 'Optional':
+
+        if field_type.__dict__.get("_name") == "Optional":
             fields.append(f"{field}?: {ts_type};")
         else:
             fields.append(f"{field}: {ts_type};")
@@ -145,7 +171,7 @@ def convert_dataclass_to_ts(cls: type, **extra:'Extra') -> str:
     return f"interface {class_name} {{\n  {fields_str}\n}}"
 
 
-def convert_function_to_ts(func: Callable, **extra:'Extra') -> str:
+def convert_function_to_ts(func: Callable, **extra: "Extra") -> str:
     """
     将 Python 函数类型注解转换为 TypeScript 函数签名。
     """
@@ -154,10 +180,10 @@ def convert_function_to_ts(func: Callable, **extra:'Extra') -> str:
     for param, param_type in type_hints.items():
         if param != "return":
             ts_type = map_base_type(param_type, **extra)
-            
+
             if param_type is Any:
                 parameters.append(f"{param}: any")
-            elif param_type.__dict__.get('_name') == 'Optional':
+            elif param_type.__dict__.get("_name") == "Optional":
                 parameters.append(f"{param}?: {ts_type}")
             else:
                 parameters.append(f"{param}: {ts_type}")
@@ -169,8 +195,6 @@ def convert_function_to_ts(func: Callable, **extra:'Extra') -> str:
 
     params_str = ", ".join(parameters)
     return f"function {func.__name__}({params_str}): {ts_return_type};"
-
-
 
 
 def process_newType(*stack: list[type], **processer) -> None:
@@ -203,52 +227,65 @@ def process_missing(*stack: list[type], **processer) -> str | None:
         return cur.__name__
 
     # 处理枚举类型
-    
-    if inspect.isclass(cur) and issubclass(cur, enum.Enum):
-        store_missing_type(cur,'enum',convert_enum_to_ts(cur, **processer))
-        return cur.__name__
 
-    if inspect.isclass(cur) and is_dataclass(cur):  # 处理 dataclass
-        store_missing_type(cur,'dataclass',convert_dataclass_to_ts(cur, **processer))
+    if inspect.isclass(cur) and issubclass(cur, enum.Enum):
+        store_missing_type(cur, "enum", convert_enum_to_ts(cur, **processer))
         return cur.__name__
 
     if inspect.isfunction(cur):  # 处理函数
-        store_missing_type(cur,'function',convert_function_to_ts(cur, **processer))
+        store_missing_type(cur, "function", convert_function_to_ts(cur, **processer))
         return f"typeof {cur.__name__}"
-    
+
     # 处理类方法
     if inspect.ismethod(cur):
-        store_missing_type(cur,'method',convert_function_to_ts(cur, **processer))
+        store_missing_type(cur, "method", convert_function_to_ts(cur, **processer))
         return f"typeof {cur.__name__}"
     
+
+
+    class_generic_params = {
+        "names": [],
+        "define_codes": [],
+    }
+
+    # 处理泛型类，且有类型参数
+    if (
+        inspect.isclass(cur) and
+        issubclass(cur, typing.Generic)
+        and hasattr(cur, "__parameters__")
+        and bool(cur.__parameters__)
+    ):
+        class_generic_params["names"] = [
+            map_base_type(r, **processer) for r in cur.__parameters__
+        ]
+        class_generic_params["define_codes"] = [
+            STORE_PROCESSED_TYPEVAR[r] for r in cur.__parameters__
+        ]
+
+
     # 处理插件
     for plugin in PLUGINS:
+        plugin.class_generic_params = class_generic_params    # 为插件注入泛型类参数
         if (mapped_type := plugin.map_type(cur)) is not None:
             # store_missing_type(cur,'map_type',mapped_type)
             return mapped_type
         if plugin.is_supported(cur):
-            store_missing_type(cur,plugin.name,plugin.converter(cur, **processer))
+            store_missing_type(cur, plugin.name, plugin.converter(cur, **processer))
             return cur.__name__
-        
+
     return None
 
 
+ProcessNewTypeFunc = Callable[[list[Any], "Processers"], None]
+ProcessTypeVarFunc = Callable[[list[Any], "Processers"], None]
+ProcessTypedDictFunc = Callable[[list[Any], "Processers"], None]
+ProcessEnumFunc = Callable[[list[Any], "Processers"], None]
+ProcessMissingFunc = Callable[[list[Any], "Processers"], str | None]
 
-
-
-
-
-
-
-
-ProcessNewTypeFunc = Callable[[list[Any], 'Processers'], None]
-ProcessTypeVarFunc = Callable[[list[Any], 'Processers'], None]
-ProcessTypedDictFunc = Callable[[list[Any], 'Processers'], None]
-ProcessEnumFunc = Callable[[list[Any], 'Processers'], None]
-ProcessMissingFunc = Callable[[list[Any], 'Processers'], str | None]
 
 class Processers(TypedDict):
     """处理函数"""
+
     process_newType: ProcessNewTypeFunc
     process_typeVar: ProcessTypeVarFunc
     process_typedDict: ProcessTypedDictFunc
@@ -258,4 +295,5 @@ class Processers(TypedDict):
 
 class Extra(Processers):
     """额外参数"""
+
     __stack: list[Any]

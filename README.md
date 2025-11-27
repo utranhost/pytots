@@ -100,6 +100,53 @@ print(ts_code)
 output_ts_file("output/types.ts")
 ```
 
+### 自定义类型映射
+
+pytots 提供了 `replaceable_type_map` 函数，允许您自定义特定类型的映射规则。这对于需要特殊处理或自定义类型转换的场景非常有用。
+
+```python
+from pytots import convert_to_ts, replaceable_type_map
+import datetime
+
+print("=== 自定义类型映射演示 ===")
+
+# 默认情况下，datetime.date 会被转换为 "Date"
+print(f"默认 datetime.date -> {convert_to_ts(datetime.date)}")  # Date
+
+# 使用 replaceable_type_map 自定义映射规则
+# 将 datetime.date 映射为自定义的字符串类型
+result = replaceable_type_map(datetime.date, "string")
+print(f"自定义datetime.date映射结果: {result}")  # True
+
+# 现在 datetime.date 会被转换为 "string"
+print(f"自定义后的 datetime.date -> {convert_to_ts(datetime.date)}")  # string
+
+# 将 None 类型映射为更简洁的 "undefined"
+replaceable_type_map(None, "undefined")
+print(f"自定义后的 None -> {convert_to_ts(None)}")  # undefined
+
+# 将 datetime.datetime 映射为更精确的时间戳类型
+replaceable_type_map(datetime.datetime, "number")
+print(f"自定义后的 datetime.datetime -> {convert_to_ts(datetime.datetime)}")  # number
+
+# 尝试映射不支持的类型的示例
+class CustomType:
+    pass
+
+result = replaceable_type_map(CustomType, "any")
+print(f"尝试映射自定义类型: {result}")  # False，因为CustomType不在可替换类型列表中
+```
+
+**可替换类型列表**：
+- `datetime.date`
+- `datetime.datetime` 
+- `None`
+
+**使用场景**：
+- 当您需要将日期类型映射为不同的TypeScript类型时
+- 当您想要简化 `None` 类型的映射时
+- 当您需要与现有TypeScript代码库保持类型一致性时
+
 ### Pydantic模型转换
 ```python
 from pytots.plugin.plus import PydanticPlugin
@@ -354,6 +401,10 @@ print(ts_code)
 - `output_ts_file(file_path: str, module_name: str | None = "PytsDemo", format: bool = True) -> None`：输出TypeScript代码到文件
 - `reset_store() -> None`：清除所有已转换的类型定义缓存
 
+### 类型映射配置
+
+- `replaceable_type_map(type_, value) -> bool`：自定义可替换类型的映射规则
+
 ### 插件相关
 
 - `Plugin`：插件基类
@@ -368,6 +419,7 @@ print(ts_code)
 - `circular_reference_example.py` - 循环引用处理示例
 - `pydantic_example.py` - Pydantic 类型转换示例
 - `sqlmodel_example.py` - SQLModel 类型转换示例
+- `replaceable_type_map_example.py` - 自定义类型映射示例
 
 ## 开发
 

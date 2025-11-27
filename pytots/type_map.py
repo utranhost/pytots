@@ -10,6 +10,8 @@ from typing import (
 )
 from builtins import Ellipsis
 
+from pytots.store import STORE_PROCESSED_GENERIC, STORE_PROCESSED_TYPEVAR
+
 if TYPE_CHECKING:
     from .processer import (
         Extra,
@@ -209,6 +211,17 @@ def handle_literal_type(args: list[Any]) -> str:
             literal_args.append(str(arg))
     
     return join_type_args(literal_args, " | ")
+
+
+
+def handle_generic_type(generic_type,args: list[TypeVar]) -> str:
+    """
+    处理 Generic 类型。
+    """
+    res = [{STORE_PROCESSED_TYPEVAR[arg]} for arg in args]
+    res = join_type_args(res, " , ")
+    STORE_PROCESSED_GENERIC[generic_type] = res
+    return res
 
 
 def map_typedDict_type(typed_dict, **extra) -> str:
@@ -431,6 +444,12 @@ def map_base_type(
     arg_typpes = [map_base_type(arg, **extra) for arg in args]
 
     # 2.处理复合类型
+    
+    if origin is typing.Generic:   # 处理 Generic 类型
+        res = handle_generic_type(python_type,args)
+        __stack.pop()
+        return res
+    
     if origin in ARRAY_TYPES_COLLECTION:  # 映射 List
         res = handle_list_type(arg_typpes)
         __stack.pop()

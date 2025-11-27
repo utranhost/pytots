@@ -1,7 +1,10 @@
 import pytest
 from pytots import convert_to_ts
-from typing import Set, FrozenSet, Deque, List, Dict
+from typing import Set, FrozenSet, Deque, List, Dict, Any
 from collections import deque, Counter, ChainMap
+import datetime
+
+
 
 # basic types
 def test_basic_types():
@@ -15,9 +18,14 @@ def test_basic_types():
     assert convert_to_ts(dict) == "Record<string, any>"
     assert convert_to_ts(set) == "Set<any>"
     assert convert_to_ts(frozenset) == "ReadonlySet<any>"
-    # assert convert_to_ts(None) == "null | undefined"
-
-
+    assert convert_to_ts(Any) == "any"
+    
+    # 用户可替换类型
+    assert convert_to_ts(None) == "undefined | null"
+    assert convert_to_ts(datetime.datetime) == "Date"
+    assert convert_to_ts(datetime.date) == "Date"
+    
+    
 def test_set_types():
     """测试集合类型转换"""
     # 基本集合类型

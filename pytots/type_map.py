@@ -34,6 +34,7 @@ from .clf import (
     QUEUE_TYPES_COLLECTION,
     COUNTER_TYPES_COLLECTION,
     CHAINMAP_TYPES_COLLECTION,
+    REPLACEABLE_TYPES_MAP,
 )
 
 
@@ -501,6 +502,12 @@ def map_base_type(
             return res
         return "any"
 
+    if origin in REPLACEABLE_TYPES_MAP:
+        res = REPLACEABLE_TYPES_MAP[origin]
+        __stack.pop()
+        return res
+    
+    # any 兜底
     __stack.pop()
     return "any"
 

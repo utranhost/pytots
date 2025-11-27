@@ -1,9 +1,9 @@
-
 from collections import OrderedDict, defaultdict, deque, ChainMap, Counter
 import types
 import typing
 import decimal
 import uuid
+import datetime
 
 # 单一类型映射表
 SINGLE_TYPES_MAP = {
@@ -45,7 +45,7 @@ RECORD_TYPES_COLLECTION = [
 ]
 
 
-SET_TYPES_COLLECTION =[
+SET_TYPES_COLLECTION = [
     set,
     frozenset,
     typing.Set,
@@ -70,10 +70,7 @@ CHAINMAP_TYPES_COLLECTION = [
     ChainMap,
 ]
 
-UNION_TYPES_COLLECTION = [
-    typing.Union,
-    types.UnionType
-]
+UNION_TYPES_COLLECTION = [typing.Union, types.UnionType]
 
 OPTIONAL_TYPES_COLLECTION = [
     typing.Optional,
@@ -84,11 +81,38 @@ LITERAL_TYPES_COLLECTION = [
 ]
 
 
+# 可替换的类型映射
+REPLACEABLE_TYPES_MAP = {
+    datetime.date: "Date",
+    datetime.datetime: "Date",
+    None: "undefined | null",
+}
+
+
+# 可替换类型提供替换的函数接口
+def replaceable_type_map(
+    type_: datetime.date | datetime.datetime | None, 
+    value: str
+) -> bool:
+    """
+    可替换类型映射函数，用于将可替换类型映射为 TypeScript 类型。
+    Args:
+        type_: 可替换类型
+        value: 可替换类型的默认值
+    Returns:
+        TypeScript 类型字符串
+    """
+    if type_ in REPLACEABLE_TYPES_MAP:
+        REPLACEABLE_TYPES_MAP[type_] = value
+        return True
+    else:
+        return False
+
+
+
 
 __all__ = [
     "SINGLE_TYPES_MAP",
-    "PYDANTIC_TYPES_MAP",
-    "SQLMODEL_TYPES_MAP",
     "ARRAY_TYPES_COLLECTION",
     "TUPLE_TYPES_COLLECTION",
     "RECORD_TYPES_COLLECTION",
@@ -99,4 +123,6 @@ __all__ = [
     "UNION_TYPES_COLLECTION",
     "OPTIONAL_TYPES_COLLECTION",
     "LITERAL_TYPES_COLLECTION",
+    "REPLACEABLE_TYPES_MAP",
+    "replaceable_type_map",
 ]

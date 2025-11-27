@@ -14,6 +14,12 @@ from pytots.processer import (
 )
 from pytots.formart import TypeScriptFormatter
 
+from pytots.plugin import use_plugin
+from pytots.plugin.inner import DataclassPlugin
+
+use_plugin(DataclassPlugin())
+
+
 
 def convert_to_ts(obj) -> str:
     """
@@ -47,7 +53,7 @@ def get_output_ts_str(
 
     result = [
         *STORE_PROCESSED_NEWTYPE.values(),
-        *STORE_PROCESSED_TYPEVAR.values(),
+        # *STORE_PROCESSED_TYPEVAR.values(),
         *STORE_PROCESSED_TYPEDDICT.values(),
         *STORE_PROCESSED_ENUM.values(),
     ]

@@ -10,6 +10,10 @@ from .main import (
     reset_store
 )
 
+from .clf import (
+    replaceable_type_map,
+)
+
 from .plugin import Plugin, use_plugin
 
 # 导出主要功能
@@ -20,4 +24,5 @@ __all__ = [
     "reset_store",
     "Plugin",
     "use_plugin",
+    "replaceable_type_map",
 ]

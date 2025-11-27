@@ -8,6 +8,7 @@ from typing import (
     get_args,
     TYPE_CHECKING,
 )
+from builtins import Ellipsis
 
 if TYPE_CHECKING:
     from .processer import (
@@ -30,6 +31,9 @@ from .clf import (
     SINGLE_TYPES_MAP,
     TUPLE_TYPES_COLLECTION,
     UNION_TYPES_COLLECTION,
+    QUEUE_TYPES_COLLECTION,
+    COUNTER_TYPES_COLLECTION,
+    CHAINMAP_TYPES_COLLECTION,
 )
 
 
@@ -55,12 +59,24 @@ def handle_list_type(args: list[str]) -> str:
 def handel_tuple_type(args: list[str]) -> str:
     """
     处理tuple类型。
+    
+    支持:
+    - tuple[] -> any[] (可变长度元组)
+    - tuple[T] -> [T] (单元素元组)
+    - tuple[T1, T2, ...] -> [T1, T2, ...] (固定长度元组)
+    - tuple[T, ...] -> T[] (可变长度元组)
     """
     if len(args) == 0:
+        # tuple[] 表示可变长度元组
         return "any[]"
-    if len(args) == 1:
+    elif len(args) == 1:
+        # tuple[T] 表示单元素元组
         return f"[{args[0]}]"
+    elif len(args) == 2 and (args[1] == "..." or args[1] is Ellipsis):
+        # tuple[T, ...] 表示可变长度元组
+        return f"{args[0]}[]"
     else:
+        # tuple[T1, T2, ...] 表示固定长度元组
         return f"[{join_type_args(args)}]"
 
 
@@ -90,16 +106,71 @@ def handle_record_type(args: list[str]) -> str:
         raise ValueError("Record type must have two arguments.")
 
 
-def handle_set_type(args: list[str]) -> str:
+def handle_set_type(origin: type, args: list[str]) -> str:
     """
     处理 Set类型。
+    
+    支持:
+    - set[T] -> Set<T>
+    - frozenset[T] -> ReadonlySet<T>
+    - set -> Set<any>
+    - frozenset -> ReadonlySet<any>
     """
+    typeName = "Set" if origin is set else "ReadonlySet"
     if len(args) == 0:
-        return "Set<any>"
+        return f"{typeName}<any>"
     elif len(args) == 1:
-        return f"Set<{args[0]}>"
+        return f"{typeName}<{args[0]}>"
     else:
         raise ValueError("Set type must have one argument.")
+
+
+def handle_deque_type(args: list[str]) -> str:
+    """
+    处理 deque 类型。
+    
+    支持:
+    - deque[T] -> Array<T>
+    - deque -> Array<any>
+    """
+    if len(args) == 0:
+        return "Array<any>"
+    elif len(args) == 1:
+        return f"Array<{args[0]}>"
+    else:
+        raise ValueError("Deque type must have one argument.")
+
+
+def handle_counter_type(args: list[str]) -> str:
+    """
+    处理 Counter 类型。
+    
+    支持:
+    - Counter[T] -> Record<T, number>
+    - Counter -> Record<any, number>
+    """
+    if len(args) == 0:
+        return "Record<any, number>"
+    elif len(args) == 1:
+        return f"Record<{args[0]}, number>"
+    else:
+        raise ValueError("Counter type must have one argument.")
+
+
+def handle_chainmap_type(args: list[str]) -> str:
+    """
+    处理 ChainMap 类型。
+    
+    支持:
+    - ChainMap[K, V] -> Record<K, V>
+    - ChainMap -> Record<any, any>
+    """
+    if len(args) == 0:
+        return "Record<any, any>"
+    elif len(args) == 2:
+        return f"Record<{args[0]}, {args[1]}>"
+    else:
+        raise ValueError("ChainMap type must have two arguments.")
 
 
 def handle_callable_type(args: list[str]) -> str:
@@ -329,7 +400,14 @@ def map_base_type(
     
 
     if type(python_type) is tuple:  # 处理元组
-        res = handel_tuple_type([map_base_type(a, **extra) for a in python_type])
+        # 检查是否是可变长度元组 (tuple[T, ...])
+        if len(python_type) == 2 and python_type[1] is Ellipsis:
+            # tuple[T, ...] -> T[]
+            element_type = map_base_type(python_type[0], **extra)
+            res = f"{element_type}[]"
+        else:
+            # 固定长度元组
+            res = handel_tuple_type([map_base_type(a, **extra) for a in python_type])
         __stack.pop()
         return res
 
@@ -358,7 +436,13 @@ def map_base_type(
         return res
 
     if origin in TUPLE_TYPES_COLLECTION:  # 映射 Tuple
-        res = handel_tuple_type(arg_typpes)
+        # 检查是否是可变长度元组 (tuple[T, ...])
+        if len(args) == 2 and args[1] is Ellipsis:
+            # tuple[T, ...] -> T[]
+            element_type = map_base_type(args[0], **extra)
+            res = f"{element_type}[]"
+        else:
+            res = handel_tuple_type(arg_typpes)
         __stack.pop()
         return res
 
@@ -368,7 +452,22 @@ def map_base_type(
         return res
 
     if origin in SET_TYPES_COLLECTION:  # 映射 Set
-        res = handle_set_type(arg_typpes)
+        res = handle_set_type(origin,arg_typpes)
+        __stack.pop()
+        return res
+
+    if origin in QUEUE_TYPES_COLLECTION:  # 映射 Deque
+        res = handle_deque_type(arg_typpes)
+        __stack.pop()
+        return res
+
+    if origin in COUNTER_TYPES_COLLECTION:  # 映射 Counter
+        res = handle_counter_type(arg_typpes)
+        __stack.pop()
+        return res
+
+    if origin in CHAINMAP_TYPES_COLLECTION:  # 映射 ChainMap
+        res = handle_chainmap_type(arg_typpes)
         __stack.pop()
         return res
 
@@ -413,4 +512,7 @@ __all__ = [
     "map_type_alias_type",
     "map_typeVar_type",
     "map_enum_type",
+    "handle_deque_type",
+    "handle_counter_type",
+    "handle_chainmap_type",
 ]

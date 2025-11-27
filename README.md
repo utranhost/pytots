@@ -56,6 +56,28 @@ print(f"List[int] -> {convert_to_ts(List[int])}")          # Array<number>
 print(f"Dict[str, int] -> {convert_to_ts(Dict[str, int])}") # Record<string, number>
 print(f"Optional[str] -> {convert_to_ts(Optional[str])}")   # string | null | undefined
 
+# 集合类型（新增支持）
+print(f"Set[int] -> {convert_to_ts(Set[int])}")            # Set<number>
+print(f"FrozenSet[str] -> {convert_to_ts(FrozenSet[str])}") # ReadonlySet<string>
+print(f"tuple[int, str] -> {convert_to_ts(tuple[int, str])}") # [number, string]
+print(f"tuple[int, ...] -> {convert_to_ts(tuple[int, ...])}") # number[]
+
+# collections模块类型
+from collections import deque, Counter, ChainMap
+print(f"deque[str] -> {convert_to_ts(deque[str])}")          # Array<string>
+print(f"Counter[str] -> {convert_to_ts(Counter[str])}")      # Record<string, number>
+print(f"ChainMap[str, int] -> {convert_to_ts(ChainMap[str, int])}") # Record<string, number>
+
+# 新增基础类型
+import decimal
+import uuid
+print(f"bytes -> {convert_to_ts(bytes)}")                    # Uint8Array
+print(f"object -> {convert_to_ts(object)}")                  # any
+print(f"decimal.Decimal -> {convert_to_ts(decimal.Decimal)}") # number
+print(f"uuid.UUID -> {convert_to_ts(uuid.UUID)}")           # string
+print(f"complex -> {convert_to_ts(complex)}")               # {real: number, imag: number}
+print(f"range -> {convert_to_ts(range)}")                   # {start: number, stop: number, step: number}
+
 # 枚举类型
 class Color(enum.Enum):
     RED = 1
@@ -103,9 +125,25 @@ convert_to_ts(User)
 | `str` | `string` | `name: string` |
 | `int`, `float` | `number` | `age: number` |
 | `bool` | `boolean` | `is_active: boolean` |
-| `List[T]` | `T[]` | `tags: string[]` |
+| `bytes` | `Uint8Array` | `data: Uint8Array` |
+| `bytearray` | `Uint8Array` | `buffer: Uint8Array` |
+| `complex` | `{real: number, imag: number}` | `value: {real: number, imag: number}` |
+| `range` | `{start: number, stop: number, step: number}` | `range: {start: number, stop: number, step: number}` |
+| `type(None)` | `null \| undefined` | `value: null \| undefined` |
+| `object` | `any` | `obj: any` |
+| `decimal.Decimal` | `number` | `price: number` |
+| `uuid.UUID` | `string` | `id: string` |
+| `List[T]` | `Array<T>` | `tags: Array<string>` |
 | `Dict[K, V]` | `Record<K, V>` | `data: Record<string, number>` |
-| `Optional[T]` | `T \| null` | `email?: string \| null` |
+| `Set[T]` | `Set<T>` | `unique_ids: Set<number>` |
+| `FrozenSet[T]` | `ReadonlySet<T>` | `constants: ReadonlySet<string>` |
+| `tuple[T]` | `[T]` | `coordinates: [number]` |
+| `tuple[T1, T2]` | `[T1, T2]` | `point: [number, number]` |
+| `tuple[T, ...]` | `T[]` | `items: number[]` |
+| `deque[T]` | `Array<T>` | `queue: Array<string>` |
+| `Counter[T]` | `Record<T, number>` | `word_count: Record<string, number>` |
+| `ChainMap[K, V]` | `Record<K, V>` | `config: Record<string, any>` |
+| `Optional[T]` | `T \| null \| undefined` | `email?: string \| null \| undefined` |
 | `Union[T, U]` | `T \| U` | `status: 'active' \| 'inactive'` |
 | `enum.Enum` | `enum` | `enum Color { RED = 1, GREEN = 2, BLUE = 3 }` |
 
@@ -170,7 +208,7 @@ convert_to_ts(User)
 ### 支持的具体类型
 
 - **基本类型**：`str`, `int`, `float`, `bool`, `None`, `Any`, `object`
-- **容器类型**：`List`, `Dict`, `Set`, `Tuple`, `Union`, `Optional`
+- **容器类型**：`List`, `Dict`, `Set`, `FrozenSet`, `Tuple`, `deque`, `Counter`, `ChainMap`, `Union`, `Optional`
 - **自定义类型**：`NewType`, `TypeVar`, `TypedDict`
 - **类类型**：`dataclass` 类转换
 - **函数类型**：函数签名转换

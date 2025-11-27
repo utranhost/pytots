@@ -1,7 +1,9 @@
 
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict, defaultdict, deque, ChainMap, Counter
 import types
 import typing
+import decimal
+import uuid
 
 # 单一类型映射表
 SINGLE_TYPES_MAP = {
@@ -9,10 +11,14 @@ SINGLE_TYPES_MAP = {
     float: "number",
     str: "string",
     bool: "boolean",
-    bytes: "Uint8Array",
-    complex: "string",  # complex 类型不能直接映射，使用字符串替代
-    range: "number[]",  # range 类型不能直接映射，使用 number[] 代替
+    bytes: "Uint8Array",  # bytes类型映射为TypeScript的Uint8Array
+    bytearray: "Uint8Array",  # bytearray类型也映射为Uint8Array
+    complex: "{real: number, imag: number}",  # complex类型映射为包含实部和虚部的对象
+    range: "{start: number, stop: number, step: number}",  # range类型映射为包含start/stop/step的对象
     type(None): "null | undefined",  # 需要特殊处理
+    object: "any",  # Python的object类型映射为TypeScript的any
+    decimal.Decimal: "number",  # decimal类型映射为TypeScript的number
+    uuid.UUID: "string",  # uuid类型映射为TypeScript的string
 }
 
 
@@ -45,6 +51,23 @@ SET_TYPES_COLLECTION =[
     typing.Set,
     typing.FrozenSet,
     typing.get_origin(typing.MutableSet),
+    typing.get_origin(typing.AbstractSet),
+]
+
+# 队列类型集合
+QUEUE_TYPES_COLLECTION = [
+    deque,
+    typing.get_origin(typing.Deque),
+]
+
+# 计数器类型集合
+COUNTER_TYPES_COLLECTION = [
+    Counter,
+]
+
+# 链式映射类型集合
+CHAINMAP_TYPES_COLLECTION = [
+    ChainMap,
 ]
 
 UNION_TYPES_COLLECTION = [
@@ -70,6 +93,9 @@ __all__ = [
     "TUPLE_TYPES_COLLECTION",
     "RECORD_TYPES_COLLECTION",
     "SET_TYPES_COLLECTION",
+    "QUEUE_TYPES_COLLECTION",
+    "COUNTER_TYPES_COLLECTION",
+    "CHAINMAP_TYPES_COLLECTION",
     "UNION_TYPES_COLLECTION",
     "OPTIONAL_TYPES_COLLECTION",
     "LITERAL_TYPES_COLLECTION",

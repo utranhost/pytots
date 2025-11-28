@@ -1,3 +1,4 @@
+import inspect
 import typing
 from typing import (
     Any,
@@ -365,6 +366,17 @@ def map_base_type(
     # 判断是否为自引用
     if python_type in __stack:
         return f"{python_type.__name__}"
+    
+    # 1. 处理 ForwardRef 类型
+    if isinstance(python_type, typing.ForwardRef):
+        # try:
+        #     bbb = python_type._evaluate(globals(), locals(), frozenset())
+        # except NameError:
+        #     pass
+        # __stack.append(python_type)
+        return python_type.__forward_arg__
+
+
 
     __stack.append(python_type)
     processer: "Processers" = {
@@ -513,6 +525,7 @@ def map_base_type(
         __stack.pop()
         return res
 
+    
     if process_missing and (
         res := process_missing(*__stack, **processer)
     ):  # 处理未知类型

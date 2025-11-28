@@ -248,6 +248,8 @@ convert_to_ts(User)
 - **支持基本Python类型到TypeScript类型的转换**
 - **支持高级类型转换**：Union、Optional、Literal等
 - **处理循环引用问题**：自动检测并处理类型间的循环依赖
+- **增强的泛型支持**：支持复杂的泛型类、泛型接口和参数替换机制
+- **统一的类型映射**：改进的类型映射系统，提供更丰富的类型信息和处理能力
 - **支持自定义类型映射**：可扩展的类型映射系统
 - **插件系统**：支持通过插件扩展功能
 - **多种输出格式**：支持字符串输出和文件输出
@@ -256,9 +258,10 @@ convert_to_ts(User)
 
 - **基本类型**：`str`, `int`, `float`, `bool`, `None`, `Any`, `object`
 - **容器类型**：`List`, `Dict`, `Set`, `FrozenSet`, `Tuple`, `deque`, `Counter`, `ChainMap`, `Union`, `Optional`
-- **自定义类型**：`NewType`, `TypeVar`, `TypedDict`
+- **自定义类型**：`NewType`, `TypeVar`
 - **类类型**：`dataclass` 类转换
 - **函数类型**：函数签名转换
+- **泛型类型**：增强的泛型类和泛型接口支持
 - **插件支持**：Pydantic BaseModel、SQLModel
 
 ## 安装
@@ -307,14 +310,9 @@ output_ts_file("output/types.ts")
 ### 支持的类型示例
 
 ```python
-from typing import TypedDict, NewType, TypeVar, Optional, List
+from typing import NewType, TypeVar, Optional, List, Generic
 from dataclasses import dataclass
 from pytots import convert_to_ts, get_output_ts_str
-
-# TypedDict 转换
-class UserDict(TypedDict):
-    name: str
-    age: int
 
 # NewType 转换
 UserId = NewType("UserId", int)
@@ -329,15 +327,20 @@ class User:
     name: str
     email: Optional[str] = None
 
+# 泛型类转换
+class QueryResult(Generic[T]):
+    data: List[T]
+    total_count: int
+
 # 函数类型转换
-def process_user(user: UserDict) -> bool:
+def process_user(user: User) -> bool:
     return True
 
 # 转换所有类型
-convert_to_ts(UserDict)
 convert_to_ts(UserId)
 convert_to_ts(T)
 convert_to_ts(User)
+convert_to_ts(QueryResult[User])
 convert_to_ts(process_user)
 
 # 获取完整的TypeScript定义
@@ -347,26 +350,33 @@ print(ts_code)
 
 ## 插件系统
 
-pytots 提供了插件系统，可以扩展支持更多类型系统。
+pytots 提供了插件系统，可以扩展支持更多类型系统。插件系统现在支持通过 `generic_feild_fill` 函数实现高级泛型类型处理。
 
 ### Pydantic 支持
 
 ```python
 from pytots.plugin.plus.pydantic_plugin import PydanticPlugin
 from pytots import use_plugin, convert_to_ts, get_output_ts_str
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Generic as PydanticGeneric
 
 # 启用Pydantic插件
 use_plugin(PydanticPlugin())
 
+# 基本模型转换
 class User(BaseModel):
     id: int
     name: str
     email: EmailStr
     age: Optional[int] = None
 
+# 泛型模型转换
+class ResponseModel(PydanticGeneric[T]):
+    data: T
+    success: bool
+
 # 转换Pydantic模型
 convert_to_ts(User)
+convert_to_ts(ResponseModel[User])
 ts_code = get_output_ts_str()
 print(ts_code)
 ```
@@ -377,17 +387,27 @@ print(ts_code)
 from pytots.plugin.plus.sqlmodel_plugin import SqlModelPlugin
 from pytots import use_plugin, convert_to_ts, get_output_ts_str
 from sqlmodel import SQLModel, Field
+from typing import Generic, TypeVar
 
 # 启用SQLModel插件
 use_plugin(SqlModelPlugin())
 
+# 基本模型转换
 class User(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     email: str = Field(unique=True)
 
-# 转换SQLModel模型
+# 泛型响应模型
+class PaginatedResponse(Generic[T]):
+    items: List[T]
+    total: int
+    page: int
+    size: int
+
+# 转换SQLModel和泛型模型
 convert_to_ts(User)
+convert_to_ts(PaginatedResponse[User])
 ts_code = get_output_ts_str()
 print(ts_code)
 ```
@@ -441,11 +461,13 @@ pytest
 pytots/
 ├── __init__.py          # 主模块导出
 ├── main.py              # 主要功能函数
-├── type_map.py          # 类型映射系统
-├── processer.py         # 类型处理器
+├── type_map.py          # 类型映射系统（增强的泛型支持）
+├── processer.py         # 类型处理器（改进的泛型接口处理）
 ├── formart.py           # 代码格式化
+├── store.py             # 存储机制（新增泛型接口存储）
 └── plugin/              # 插件系统
     ├── __init__.py
+    ├── tools.py         # 插件工具（包含generic_feild_fill函数）
     └── plus/            # 扩展插件
         ├── pydantic_plugin.py
         └── sqlmodel_plugin.py

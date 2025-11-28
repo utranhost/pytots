@@ -1,8 +1,9 @@
 from typing import Literal, TypedDict
+
 from .. import Plugin,use_plugin
 from ..plus.pydantic_plugin import PydanticPlugin
+from ..tools import generic_feild_fill
 
-from pytots.type_map import map_base_type
 from sqlmodel import (
     SQLModel,
     AutoString,
@@ -77,8 +78,7 @@ class SqlModelPlugin(Plugin):
             if self.options.get("exclude", False) and field_info.exclude:
                 continue
             
-            ts_type = map_base_type(field_type, **extra)
-            
+            ts_type = generic_feild_fill(self,field_type)
             
             # 检查是否为可选字段
             if field_info.is_required():

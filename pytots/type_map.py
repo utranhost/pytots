@@ -225,30 +225,6 @@ def handle_generic_type(generic_type,args: list[TypeVar]) -> str:
     return res
 
 
-def map_typedDict_type(typed_dict, **extra) -> str:
-    """
-    映射 TypedDict
-    """
-    if not typing.is_typeddict(typed_dict):
-        raise TypeError("The argument must be a TypedDict.")
-
-    fields = []
-    for field, field_type in get_type_hints(typed_dict).items():
-        ts_type = map_base_type(field_type, **extra)
-
-        # 检查是否为可选类型
-        origin = get_origin(field_type)
-        if origin is typing.Optional or (
-            hasattr(field_type, "__dict__")
-            and field_type.__dict__.get("_name") == "Optional"
-        ):
-            fields.append(f"{field}?: {ts_type};")
-        else:
-            fields.append(f"{field}: {ts_type};")
-
-    fields_str = "\n  ".join(fields)
-    return f"{{\n  {fields_str}\n  }}"
-
 
 def map_newType_type(new_type, **extra) -> str:
     """
@@ -258,7 +234,8 @@ def map_newType_type(new_type, **extra) -> str:
         raise TypeError("The argument must be a NewType.")
 
     base_type = new_type.__supertype__
-    ts_base_type = map_base_type(base_type, **extra)
+    base_result = map_base_type(base_type, **extra)
+    ts_base_type = base_result["code"] if isinstance(base_result, dict) and "code" in base_result else base_result
     return ts_base_type
 
 def map_type_alias_type(type_alias, **extra) -> str:
@@ -269,7 +246,8 @@ def map_type_alias_type(type_alias, **extra) -> str:
         raise TypeError("The argument must be a TypeAlias.")
 
     base_type = type_alias.__supertype__
-    ts_base_type = map_base_type(base_type, **extra)
+    base_result = map_base_type(base_type, **extra)
+    ts_base_type = base_result["code"] if isinstance(base_result, dict) and "code" in base_result else base_result
     return ts_base_type
 
 def map_typeVar_type(type_var, **extra) -> str:
@@ -282,9 +260,14 @@ def map_typeVar_type(type_var, **extra) -> str:
     constraints = type_var.__constraints__
 
     if bound:
-        return map_base_type(bound, **extra)
+        bound_result = map_base_type(bound, **extra)
+        return bound_result["code"] if isinstance(bound_result, dict) and "code" in bound_result else bound_result
     if constraints:
-        return handle_union_type([map_base_type(c, **extra) for c in constraints])
+        constraint_list = []
+        for c in constraints:
+            c_result = map_base_type(c, **extra)
+            constraint_list.append(c_result["code"] if isinstance(c_result, dict) and "code" in c_result else c_result)
+        return handle_union_type(constraint_list)
 
     return "any"
 
@@ -343,10 +326,9 @@ def map_base_type(
     __stack: list[Any] = [],
     process_newType: 'ProcessNewTypeFunc',
     process_typeVar: 'ProcessTypeVarFunc',
-    process_typedDict: 'ProcessTypedDictFunc',
     process_enum: 'ProcessEnumFunc',
     process_missing: 'ProcessMissingFunc',
-) -> str:
+) -> dict:
     """
     基础类型映射
     #### 包含以下类型:
@@ -365,7 +347,7 @@ def map_base_type(
 
     # 判断是否为自引用
     if python_type in __stack:
-        return f"{python_type.__name__}"
+        return {"code":f"{python_type.__name__}"}
     
     # 1. 处理 ForwardRef 类型
     if isinstance(python_type, typing.ForwardRef):
@@ -374,7 +356,7 @@ def map_base_type(
         # except NameError:
         #     pass
         # __stack.append(python_type)
-        return python_type.__forward_arg__
+        return {"code":python_type.__forward_arg__}
 
 
 
@@ -382,7 +364,6 @@ def map_base_type(
     processer: "Processers" = {
         "process_newType": process_newType,
         "process_typeVar": process_typeVar,
-        "process_typedDict": process_typedDict,
         "process_enum": process_enum,
         "process_missing": process_missing,
     }
@@ -391,61 +372,65 @@ def map_base_type(
         **processer,
     }
 
-    if typing.is_typeddict(python_type):  # TypedDict 类型, 只返回名称
-        if process_typedDict:
-            process_typedDict(*__stack, **processer)
-        __stack.pop()
-        return python_type.__name__  # type: ignore
-
     if isinstance(python_type, NewType):  # 处理 NewType 类型，只返回名称
         if process_newType:
             process_newType(*__stack, **processer)
         __stack.pop()
-        return python_type.__name__  # type: ignore
+        return {"code":python_type.__name__,"new_type":True}  # type: ignore
 
     if isinstance(python_type, TypeVar):  # 处理 TypeVar 类型，只返回名称
+        res = python_type.__name__
         if process_typeVar:
-            process_typeVar(*__stack, **processer)
+            res = process_typeVar(*__stack, **processer)
         __stack.pop()
-        return python_type.__name__
+        return {"code":res,"type_var":True, "type":python_type}
 
     # 0.特殊实例处理
     if type(python_type) is str:  # 处理字符串,它是字面量
         __stack.pop()
-        return python_type
+        return {"code":python_type, "is_literal":True}
     
     
     if type(python_type) in [int,float]:  # 处理数字,它是字面量
         __stack.pop()
-        return python_type
+        return {"code":python_type, "is_literal":True}
     
     
     if type(python_type) is typing.Any:  # 处理 Any 类型
         __stack.pop()
-        return "any"
+        return {"code":"any"}
     
 
     if type(python_type) is tuple:  # 处理元组
         # 检查是否是可变长度元组 (tuple[T, ...])
         if len(python_type) == 2 and python_type[1] is Ellipsis:
             # tuple[T, ...] -> T[]
-            element_type = map_base_type(python_type[0], **extra)
+            element_result = map_base_type(python_type[0], **extra)
+            element_type = element_result["code"] if isinstance(element_result, dict) and "code" in element_result else element_result
             res = f"{element_type}[]"
         else:
             # 固定长度元组
-            res = handel_tuple_type([map_base_type(a, **extra) for a in python_type])
+            type_list = []
+            for a in python_type:
+                a_result = map_base_type(a, **extra)
+                type_list.append(a_result["code"] if isinstance(a_result, dict) and "code" in a_result else a_result)
+            res = handel_tuple_type(type_list)
         __stack.pop()
-        return res
+        return {"code":res, "tuple":True}
 
     if type(python_type) is list:
-        res = handel_tuple_type([map_base_type(a, **extra) for a in python_type])
+        type_list = []
+        for a in python_type:
+            a_result = map_base_type(a, **extra)
+            type_list.append(a_result["code"] if isinstance(a_result, dict) and "code" in a_result else a_result)
+        res = handel_tuple_type(type_list)
         __stack.pop()
-        return res
+        return {"code":res, "list":True}
 
     # 1.处理单一类型
     if any(python_type == x for x in SINGLE_TYPES_MAP.keys()):
         __stack.pop()
-        return SINGLE_TYPES_MAP[python_type]  # type: ignore
+        return {"code":SINGLE_TYPES_MAP[python_type]}  # type: ignore
 
     origin = get_origin(python_type)
     args = get_args(python_type)
@@ -453,77 +438,81 @@ def map_base_type(
     if origin is None:
         origin = python_type
 
-    arg_typpes = [map_base_type(arg, **extra) for arg in args]
+    arg_typpes = []
+    for arg in args:
+        arg_result = map_base_type(arg, **extra)
+        arg_typpes.append(arg_result["code"] if isinstance(arg_result, dict) and "code" in arg_result else arg_result)
 
     # 2.处理复合类型
     
     if origin is typing.Generic:   # 处理 Generic 类型
         res = handle_generic_type(python_type,args)
         __stack.pop()
-        return res
+        return {"code":res, "generic":True}
     
     if origin in ARRAY_TYPES_COLLECTION:  # 映射 List
         res = handle_list_type(arg_typpes)
         __stack.pop()
-        return res
+        return {"code":res, "list":True}
 
     if origin in TUPLE_TYPES_COLLECTION:  # 映射 Tuple
         # 检查是否是可变长度元组 (tuple[T, ...])
         if len(args) == 2 and args[1] is Ellipsis:
             # tuple[T, ...] -> T[]
-            element_type = map_base_type(args[0], **extra)
+            element_result = map_base_type(args[0], **extra)
+            element_type = element_result["code"] if isinstance(element_result, dict) and "code" in element_result else element_result
             res = f"{element_type}[]"
         else:
             res = handel_tuple_type(arg_typpes)
         __stack.pop()
-        return res
+        return {"code":res, "tuple":True}
 
     if origin in RECORD_TYPES_COLLECTION:  # 映射 Dict
         res = handle_record_type(arg_typpes)
         __stack.pop()
-        return res
+        return {"code":res, "dict":True}
 
     if origin in SET_TYPES_COLLECTION:  # 映射 Set
         res = handle_set_type(origin,arg_typpes)
         __stack.pop()
-        return res
+        return {"code":res, "set":True}
 
     if origin in QUEUE_TYPES_COLLECTION:  # 映射 Deque
         res = handle_deque_type(arg_typpes)
         __stack.pop()
-        return res
+        return {"code":res, "deque":True}
 
     if origin in COUNTER_TYPES_COLLECTION:  # 映射 Counter
         res = handle_counter_type(arg_typpes)
         __stack.pop()
-        return res
+        return {"code":res, "counter":True}
 
     if origin in CHAINMAP_TYPES_COLLECTION:  # 映射 ChainMap
         res = handle_chainmap_type(arg_typpes)
         __stack.pop()
-        return res
+        return {"code":res, "chainmap":True}
 
     if origin in UNION_TYPES_COLLECTION:  # 映射 Union
         res = handle_union_type(arg_typpes)
         __stack.pop()
-        return res
+        return {"code":res, "union":True}
 
     if origin in OPTIONAL_TYPES_COLLECTION:  # 映射 Optional
         res = handle_optional_type(arg_typpes)
         __stack.pop()
-        return res
+        return {"code":res, "optional":True}
 
     if origin in LITERAL_TYPES_COLLECTION:  # 映射 Literal
         res = handle_literal_type(args)
         __stack.pop()
-        return res
+        return {"code":res, "literal":True}
 
     if origin is typing.Callable or origin is get_origin(typing.Callable):
         if args[1] == type(None):
             arg_typpes[1] = "void"
         res = handle_callable_type(arg_typpes)
         __stack.pop()
-        return res
+        return {"code":res, "callable":True}
 
     
     if process_missing and (
@@ -531,22 +520,21 @@ def map_base_type(
     ):  # 处理未知类型
         __stack.pop()
         if type(res) is str:
-            return res
-        return "any"
+            return {"code":res}
+        return {"code":"any"}
 
     if origin in REPLACEABLE_TYPES_MAP:
         res = REPLACEABLE_TYPES_MAP[origin]
         __stack.pop()
-        return res
+        return {"code":res}
     
     # any 兜底
     __stack.pop()
-    return "any"
+    return {"code":"any"}
 
 
 __all__ = [
     "map_base_type",
-    "map_typedDict_type",
     "map_newType_type",
     "map_type_alias_type",
     "map_typeVar_type",

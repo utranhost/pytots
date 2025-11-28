@@ -19,19 +19,19 @@ from typing import (
 from dataclasses import is_dataclass
 from pytots.type_map import (
     map_base_type,
-    map_typedDict_type,
     map_newType_type,
     map_typeVar_type,
     map_enum_type,
 )
 from pytots.plugin import PLUGINS
 from pytots.store import (
+    STORE_GENERIC_INTERFACE,
     STORE_PROCESSED_GENERIC,
     STORE_PROCESSED_TYPEVAR,
     STORE_PROCESSED_NEWTYPE,
-    STORE_PROCESSED_TYPEDDICT,
     STORE_PROCESSED_ENUM,
     STORE_PROCESSED_MISSING,
+    TEMP_CONTEXT,
 )
 
 
@@ -51,28 +51,6 @@ def exist_missing_type(type_) -> bool:
         type_ in STORE_PROCESSED_MISSING[type_name]
         for type_name in STORE_PROCESSED_MISSING.keys()
     )
-
-
-def convert_typedDict_to_ts(typed_dict, **extra: "Extra") -> str:
-    """
-    将 Python 的 TypedDict 转换为 TypeScript 的 interface 定义。
-
-    #### 示例:
-    ```# python
-    class MyDict(TypedDict):
-        name: str
-        age: int
-
-    ```
-
-    ```# typescript
-    interface MyDict {
-      name: string;
-      age: number;
-    }
-    """
-    fields_str = map_typedDict_type(typed_dict, **extra)
-    return f"interface {typed_dict.__name__}\n  {fields_str}\n"
 
 
 def convert_newType_to_ts(new_type, **extra: "Extra") -> str:
@@ -161,7 +139,8 @@ def convert_dataclass_to_ts(cls: type, **extra: "Extra") -> str:
         # 通过检查 __origin__ 属性来检测 Final 和 ClassVar
         if get_origin(field_type) in [Final, ClassVar]:
             field_type = get_args(field_type)[0]  # 获取 Final 或 ClassVar 的原始类型
-        ts_type = map_base_type(field_type, **extra)
+        field_result = map_base_type(field_type, **extra)
+        ts_type = field_result["code"] if isinstance(field_result, dict) and "code" in field_result else field_result
 
         if field_type.__dict__.get("_name") == "Optional":
             fields.append(f"{field}?: {ts_type};")
@@ -180,7 +159,8 @@ def convert_function_to_ts(func: Callable, **extra: "Extra") -> str:
     parameters = []
     for param, param_type in type_hints.items():
         if param != "return":
-            ts_type = map_base_type(param_type, **extra)
+            param_result = map_base_type(param_type, **extra)
+            ts_type = param_result["code"] if isinstance(param_result, dict) and "code" in param_result else param_result
 
             if param_type is Any:
                 parameters.append(f"{param}: any")
@@ -190,9 +170,11 @@ def convert_function_to_ts(func: Callable, **extra: "Extra") -> str:
                 parameters.append(f"{param}: {ts_type}")
 
     return_type = type_hints.get("return", None)
-    ts_return_type = (
-        map_base_type(return_type, **extra) if return_type is not None else "void"
-    )
+    if return_type is not None:
+        return_result = map_base_type(return_type, **extra)
+        ts_return_type = return_result["code"] if isinstance(return_result, dict) and "code" in return_result else return_result
+    else:
+        ts_return_type = "void"
 
     params_str = ", ".join(parameters)
     return f"function {func.__name__}({params_str}): {ts_return_type};"
@@ -208,12 +190,11 @@ def process_typeVar(*stack: list[type], **processer) -> None:
     cur = stack[-1]
     if all(cur != x for x in STORE_PROCESSED_TYPEVAR.keys()):
         STORE_PROCESSED_TYPEVAR[cur] = convert_typeVar_to_ts(cur, **processer)
-
-
-def process_typedDict(*stack: list[type], **processer) -> None:
-    cur = stack[-1]
-    if all(cur != x for x in STORE_PROCESSED_TYPEDDICT.keys()):
-        STORE_PROCESSED_TYPEDDICT[cur] = convert_typedDict_to_ts(cur, **processer)
+        return cur.__name__
+    else:
+        if n:=TEMP_CONTEXT['typevar'].get(cur):
+            return n
+        return cur.__name__
 
 
 def process_enum(*stack: list[type], **processer) -> None:
@@ -252,14 +233,38 @@ def process_missing(*stack: list[type], **processer) -> str | None:
     class_extends_params = []
 
     extra = {**processer, "__stack": list(stack)}
+ 
+    def handle_generic_instance(cur):
+        # 处理GenericType实例（如QueryResult[TicketType]） ===> QueryResult<TicketType>
+        origin_result = map_base_type(cur.__origin__, **extra)
+        res = origin_result["code"]
+        args = []
+        for arg in get_args(cur):
+            arg_result = map_base_type(arg, **extra)
+            args.append(arg_result["code"])
+        define_code = f"{res}<{', '.join(args)}>"
+        return define_code,args
+
+
+    if type(cur) == typing._GenericAlias and get_origin(cur) != typing.Generic:
+        define_code,args = handle_generic_instance(cur)
+        origin = get_origin(cur)
+        type_vars = [x.__parameters__ for x in origin.__orig_bases__ if hasattr(x, '__parameters__')]
+        # 展平type_vars
+        type_vars = [item for sublist in type_vars for item in sublist]
+        STORE_GENERIC_INTERFACE[define_code] = {k: v for k, v in zip(type_vars, args)}
+        return define_code
+        
     if inspect.isclass(cur) and issubclass(cur, typing.Generic):
         # print(cur.__name__,'他是一个泛型类')
         if hasattr(cur, "__parameters__") and bool(cur.__parameters__):
             # 处理有参泛型类
             # print(cur.__name__,'他有类型参数')
-            class_generic_params["names"] = [
-                map_base_type(r, **extra) for r in cur.__parameters__
-            ]
+            names_list = []
+            for r in cur.__parameters__:
+                r_result = map_base_type(r, **extra)
+                names_list.append(r_result["code"])
+            class_generic_params["names"] = names_list
             class_generic_params["define_codes"] = [
                 STORE_PROCESSED_TYPEVAR[r] for r in cur.__parameters__
             ]
@@ -271,26 +276,32 @@ def process_missing(*stack: list[type], **processer) -> str | None:
             #     print('他有orig_bases: ',cur.__orig_bases__)
             
             # origin = get_origin(cur)
-            args = get_args(cur)
             # print('他的origin: ',origin)
             # print('他的args: ',args)
             
             if hasattr(cur, '__origin__'):  
                 # 处理GenericType实例（如QueryResult[TicketType]） ===> QueryResult<TicketType>
-                res = map_base_type(cur.__origin__, **extra)
-                args = [map_base_type(arg, **extra) for arg in get_args(cur)]
-                return f"{res}<{', '.join(args)}>"
+                define_code,args = handle_generic_instance(cur)
+                type_vars = [x.__parameters__ for x in cur.__orig_bases__ if hasattr(x, '__parameters__')]
+                # 展平type_vars
+                type_vars = [item for sublist in type_vars for item in sublist]
+                STORE_GENERIC_INTERFACE[define_code] = {k: v for k, v in zip(type_vars, args)}
+                return define_code
             else:
                 # 处理泛型类继承
                 if cur.__orig_bases__:
                     # o = map_base_type(cur, **extra)
 
-                    class_extends_params = [map_base_type(arg, **extra) for arg in cur.__orig_bases__]
+                    class_extends_params = []
+                    for arg in cur.__orig_bases__:
+                        arg_result = map_base_type(arg, **extra)
+                        class_extends_params.append(arg_result["code"] if isinstance(arg_result, dict) and "code" in arg_result else arg_result)
                     STORE_PROCESSED_TYPEVAR
                     STORE_PROCESSED_GENERIC
                     # return o + f"<{', '.join(a)}>"
                 else:
-                    return map_base_type(cur, **extra)
+                    result = map_base_type(cur, **extra)
+                    return result["code"] if isinstance(result, dict) and "code" in result else result
         
 
     # 处理插件

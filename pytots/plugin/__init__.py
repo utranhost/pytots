@@ -25,6 +25,8 @@ class Plugin(ABC):
     # 如果是泛型类且有类型参数，系统将自动处理并填充
     class_generic_params: ClassGenericParams = {}
 
+    # 继承的类型参数
+    class_extends_params: list[str] = []
 
     @abstractmethod
     def converter(self, python_type: Any, **extra) -> str:

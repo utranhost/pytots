@@ -26,6 +26,7 @@ from pytots.type_map import (
 )
 from pytots.plugin import PLUGINS
 from pytots.store import (
+    STORE_PROCESSED_GENERIC,
     STORE_PROCESSED_TYPEVAR,
     STORE_PROCESSED_NEWTYPE,
     STORE_PROCESSED_TYPEDDICT,
@@ -247,25 +248,55 @@ def process_missing(*stack: list[type], **processer) -> str | None:
         "names": [],
         "define_codes": [],
     }
+    
+    class_extends_params = []
 
-    # 处理泛型类，且有类型参数
-    if (
-        inspect.isclass(cur) and
-        issubclass(cur, typing.Generic)
-        and hasattr(cur, "__parameters__")
-        and bool(cur.__parameters__)
-    ):
-        class_generic_params["names"] = [
-            map_base_type(r, **processer) for r in cur.__parameters__
-        ]
-        class_generic_params["define_codes"] = [
-            STORE_PROCESSED_TYPEVAR[r] for r in cur.__parameters__
-        ]
+    extra = {**processer, "__stack": list(stack)}
+    if inspect.isclass(cur) and issubclass(cur, typing.Generic):
+        # print(cur.__name__,'他是一个泛型类')
+        if hasattr(cur, "__parameters__") and bool(cur.__parameters__):
+            # 处理有参泛型类
+            # print(cur.__name__,'他有类型参数')
+            class_generic_params["names"] = [
+                map_base_type(r, **extra) for r in cur.__parameters__
+            ]
+            class_generic_params["define_codes"] = [
+                STORE_PROCESSED_TYPEVAR[r] for r in cur.__parameters__
+            ]
 
+        else:
+            # 无参泛型类
+            # print(cur.__name__,'无参泛型类')
+            # if hasattr(cur, "__orig_bases__"):
+            #     print('他有orig_bases: ',cur.__orig_bases__)
+            
+            # origin = get_origin(cur)
+            args = get_args(cur)
+            # print('他的origin: ',origin)
+            # print('他的args: ',args)
+            
+            if hasattr(cur, '__origin__'):  
+                # 处理GenericType实例（如QueryResult[TicketType]） ===> QueryResult<TicketType>
+                res = map_base_type(cur.__origin__, **extra)
+                args = [map_base_type(arg, **extra) for arg in get_args(cur)]
+                return f"{res}<{', '.join(args)}>"
+            else:
+                # 处理泛型类继承
+                if cur.__orig_bases__:
+                    # o = map_base_type(cur, **extra)
+
+                    class_extends_params = [map_base_type(arg, **extra) for arg in cur.__orig_bases__]
+                    STORE_PROCESSED_TYPEVAR
+                    STORE_PROCESSED_GENERIC
+                    # return o + f"<{', '.join(a)}>"
+                else:
+                    return map_base_type(cur, **extra)
+        
 
     # 处理插件
     for plugin in PLUGINS:
         plugin.class_generic_params = class_generic_params    # 为插件注入泛型类参数
+        plugin.class_extends_params = class_extends_params    # 为插件注入继承类参数
         if (mapped_type := plugin.map_type(cur)) is not None:
             # store_missing_type(cur,'map_type',mapped_type)
             return mapped_type
@@ -273,6 +304,9 @@ def process_missing(*stack: list[type], **processer) -> str | None:
             store_missing_type(cur, plugin.name, plugin.converter(cur, **processer))
             return cur.__name__
 
+
+
+        
     return None
 
 

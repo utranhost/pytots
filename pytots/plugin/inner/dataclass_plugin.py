@@ -54,8 +54,12 @@ class DataclassPlugin(Plugin):
 
         fields_str = "\n  ".join(fields)
         
+        extends_str = ""
+        if self.class_extends_params:
+            extends_str = f" extends {', '.join(self.class_extends_params)}"
+        
         if self.class_generic_params["define_codes"]:
             generic_params = ", ".join(self.class_generic_params["define_codes"])
-            return f"interface {class_name}<{generic_params}> {{\n  {fields_str}\n}}"
+            return f"interface {class_name}{extends_str}<{generic_params}> {{\n  {fields_str}\n}}"
         
-        return f"interface {class_name} {{\n  {fields_str}\n}}"
+        return f"interface {class_name}{extends_str} {{\n  {fields_str}\n}}"

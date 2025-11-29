@@ -4,10 +4,7 @@ typedict类处理插件
 import typing
 from typing import (
     get_type_hints,
-    get_origin,
-    get_args,
-    Final,
-    ClassVar
+    get_origin
 )
 
 from .. import Plugin
@@ -32,7 +29,7 @@ class TypedDictPlugin(Plugin):
     
     def __init__(self, options: TypedDictPluginOptions={}) -> None:
         self.options = options
-        self.type_prefix = options.get("type_prefix", "type")
+        self.type_prefix = options.get("type_prefix", self.type_prefix)
     
     
     def is_supported(self, python_type: type) -> bool:

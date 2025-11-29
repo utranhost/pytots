@@ -96,7 +96,7 @@ class PydanticPlugin(Plugin):
     
     def __init__(self, options: PydanticPluginOptions={}) -> None:
         self.options = options
-        self.type_prefix = options.get("type_prefix", "type")
+        self.type_prefix = options.get("type_prefix", self.type_prefix)
         
     def converter(self, python_type: type, **extra) -> str:
         """类型转换"""

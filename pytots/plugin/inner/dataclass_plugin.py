@@ -28,7 +28,7 @@ class DataclassPlugin(Plugin):
     
     def __init__(self, options: DataclassPluginOptions={}) -> None:
         self.options = options
-        self.type_prefix = options.get("type_prefix", "type")
+        self.type_prefix = options.get("type_prefix", self.type_prefix)
     
     
     def is_supported(self, python_type: type) -> bool:

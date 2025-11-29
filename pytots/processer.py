@@ -128,28 +128,6 @@ def convert_enum_to_ts(enum_type, **extra: "Extra") -> str:
     return map_enum_type(enum_type, **extra)
 
 
-def convert_dataclass_to_ts(cls: type, **extra: "Extra") -> str:
-    """
-    将 Python 类转换为 TypeScript 的 interface 定义。
-    """
-    class_name = cls.__name__
-    type_hints = get_type_hints(cls)
-    fields = []
-    for field, field_type in type_hints.items():
-        # 通过检查 __origin__ 属性来检测 Final 和 ClassVar
-        if get_origin(field_type) in [Final, ClassVar]:
-            field_type = get_args(field_type)[0]  # 获取 Final 或 ClassVar 的原始类型
-        field_result = map_base_type(field_type, **extra)
-        ts_type = field_result["code"] if isinstance(field_result, dict) and "code" in field_result else field_result
-
-        if field_type.__dict__.get("_name") == "Optional":
-            fields.append(f"{field}?: {ts_type};")
-        else:
-            fields.append(f"{field}: {ts_type};")
-
-    fields_str = "\n  ".join(fields)
-    return f"interface {class_name} {{\n  {fields_str}\n}}"
-
 
 def convert_function_to_ts(func: Callable, **extra: "Extra") -> str:
     """

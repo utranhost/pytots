@@ -83,8 +83,8 @@ LITERAL_TYPES_COLLECTION = [
 
 # 可替换的类型映射
 REPLACEABLE_TYPES_MAP = {
-    datetime.date: "Date",
-    datetime.datetime: "Date",
+    datetime.date: "string",
+    datetime.datetime: "string",
     None: "undefined | null",
 }
 

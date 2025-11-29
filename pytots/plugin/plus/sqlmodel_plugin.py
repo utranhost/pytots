@@ -2,7 +2,7 @@ from typing import Literal, TypedDict
 
 from .. import Plugin,use_plugin
 from ..plus.pydantic_plugin import PydanticPlugin
-from ..tools import generic_feild_fill
+from ..tools import generic_feild_fill,assemble_interface_type
 
 from sqlmodel import (
     SQLModel,
@@ -60,7 +60,7 @@ class SqlModelPlugin(Plugin):
     
     def __init__(self, options: SqlModelPluginOptions={}) -> None:
         self.options = options
-        self.type_prefix = options.get("type_prefix", "interface")
+        self.type_prefix = options.get("type_prefix", "type")
         use_plugin(PydanticPlugin(options))
 
     def converter(self, python_type: type, **extra) -> str:
@@ -86,11 +86,9 @@ class SqlModelPlugin(Plugin):
             else:
                 fields.append(f"{field_name}?: {ts_type};")
         
+        class_name = python_type.__name__
         fields_str = "\n  ".join(fields)
-        if self.type_prefix == "type":
-            return f"{self.type_prefix} {python_type.__name__} = {{\n  {fields_str}\n}}"
-        else:
-            return f"{self.type_prefix} {python_type.__name__} {{\n  {fields_str}\n}}"
+        return assemble_interface_type(self, class_name, fields_str)
 
 
     def is_supported(self, python_type: type) -> bool:

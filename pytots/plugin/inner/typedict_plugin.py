@@ -11,7 +11,15 @@ from typing import (
 )
 
 from .. import Plugin
-from ..tools import generic_feild_fill
+from ..tools import generic_feild_fill,assemble_interface_type
+
+
+
+class TypedDictPluginOptions(typing.TypedDict):
+    """
+    typedict类处理插件选项
+    """
+    type_prefix: typing.Literal["interface", "type"] = "type"
 
 
 class TypedDictPlugin(Plugin):
@@ -20,6 +28,11 @@ class TypedDictPlugin(Plugin):
     """
     
     name = "typedict"
+    
+    
+    def __init__(self, options: TypedDictPluginOptions={}) -> None:
+        self.options = options
+        self.type_prefix = options.get("type_prefix", "type")
     
     
     def is_supported(self, python_type: type) -> bool:
@@ -51,12 +64,4 @@ class TypedDictPlugin(Plugin):
 
         fields_str = "\n  ".join(fields)
 
-        extends_str = ""
-        if self.class_extends_params:
-            extends_str = f" extends {', '.join(self.class_extends_params)}"
-        
-        if self.class_generic_params["define_codes"]:
-            generic_params = ", ".join(self.class_generic_params["define_codes"])
-            return f"interface {class_name}{extends_str}<{generic_params}> {{\n  {fields_str}\n}}"
-        
-        return f"interface {class_name}{extends_str} {{\n  {fields_str}\n}}"
+        return assemble_interface_type(self, class_name, fields_str)

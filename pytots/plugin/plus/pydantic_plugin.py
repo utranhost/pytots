@@ -1,6 +1,6 @@
 from typing import Literal, TypedDict
 from .. import Plugin
-from ..tools import generic_feild_fill
+from ..tools import generic_feild_fill,assemble_interface_type
 
 from pydantic import (
     BaseModel,
@@ -96,7 +96,7 @@ class PydanticPlugin(Plugin):
     
     def __init__(self, options: PydanticPluginOptions={}) -> None:
         self.options = options
-        self.type_prefix = options.get("type_prefix", "interface")
+        self.type_prefix = options.get("type_prefix", "type")
         
     def converter(self, python_type: type, **extra) -> str:
         """类型转换"""
@@ -123,10 +123,8 @@ class PydanticPlugin(Plugin):
                 fields.append(f"{field_name}?: {ts_type};")
 
         fields_str = "\n  ".join(fields)
-        if self.type_prefix == "type":
-            return f"{self.type_prefix} {python_type.__name__} = {{\n  {fields_str}\n}}"
-        else:
-            return f"{self.type_prefix} {python_type.__name__} {{\n  {fields_str}\n}}"
+        class_name = python_type.__name__
+        return assemble_interface_type(self, class_name, fields_str)
 
     def is_supported(self, type_: type) -> bool:
         """是否支持该类型"""

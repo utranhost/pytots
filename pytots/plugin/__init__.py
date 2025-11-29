@@ -51,10 +51,10 @@ def use_plugin(*plugins: Plugin):
 
     for plugin in plugins:
         if not isinstance(plugin, Plugin):
-            raise TypeError(f"非法插件 {plugin.__class__.__name__}, 必须继承自Plugin类的实例")
+            raise TypeError(f"❌ {plugin.__class__.__name__}, 无法注册非Plugin类")
 
         PLUGINS.append(plugin)
-        print(f"插件 {plugin.__class__.__name__} 已注册")
+        print(f"✅ {plugin.name if plugin.name and plugin.name != 'pytots-plugin' else plugin.__class__.__name__}")
 
 
 def override_plugin(*plugins: Plugin):
@@ -64,7 +64,7 @@ def override_plugin(*plugins: Plugin):
     """
     for plugin in plugins:
         if not isinstance(plugin, Plugin):
-            raise TypeError(f"非法插件 {plugin.__class__.__name__}, 必须继承自Plugin类")
+            raise TypeError(f"❌ {plugin.__class__.__name__}, 非Plugin类，无法覆盖")
 
         # 从PLUGINS实例中替换掉相同name的插件
         for i, p in enumerate(PLUGINS):
@@ -72,7 +72,7 @@ def override_plugin(*plugins: Plugin):
                 PLUGINS[i] = plugin
                 break
         else:
-            print(f"覆盖失败,未找到插件 {plugin.__class__.__name__}")
+            print(f"⚠️ 覆盖失败,未找到插件 {plugin.__class__.__name__}")
 
-        print(f"插件 {plugin.name} 已覆盖")
+        print(f"🔄 {plugin.name if plugin.name and plugin.name != 'pytots-plugin' else plugin.__class__.__name__}")
 

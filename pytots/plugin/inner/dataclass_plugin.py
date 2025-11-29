@@ -49,7 +49,7 @@ class DataclassPlugin(Plugin):
         fields = []
         for field, field_type in get_type_hints(python_type).items():
             ts_type = generic_feild_fill(self,field_type)
-            if field_type.__dict__.get("_name") == "Optional":
+            if "undefined" in ts_type:
                 fields.append(f"{field}?: {ts_type};")
             else:
                 fields.append(f"{field}: {ts_type};")

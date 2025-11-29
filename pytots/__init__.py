@@ -1,6 +1,6 @@
 """pytots: A lightweight tool that helps you convert Python types to TypeScript types"""
 
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 
 # 导入主要功能
 from .main import (

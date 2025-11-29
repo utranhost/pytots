@@ -3,7 +3,7 @@ name = "pytots"
 authors = [
     { name = "utran", email = "utran.host@qq.com" },
 ]
-version = "0.3.3"
+version = "0.3.4"
 description = "A lightweight tool that helps you convert Python types to TypeScript types"
 readme = "README.md"
 requires-python = ">=3.10"

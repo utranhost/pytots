@@ -1,478 +1,359 @@
-# pytots - Python到TypeScript类型转换工具
+<p align="center">
+  <a href="https://github.com/utranhost/pytots">
+    <img src="https://img.shields.io/github/stars/utranhost/pytots?style=for-the-badge&labelColor=232323&color=ffcb47" alt="GitHub Stars"/>
+  </a>
+  <a href="https://github.com/utranhost/pytots">
+    <img src="https://img.shields.io/github/forks/utranhost/pytots?style=for-the-badge&labelColor=232323&color=4ecdc4" alt="GitHub Forks"/>
+  </a>
+  <a href="https://github.com/utranhost/pytots/issues">
+    <img src="https://img.shields.io/github/issues/utranhost/pytots?style=for-the-badge&labelColor=232323&color=ff6b6b" alt="GitHub Issues"/>
+  </a>
+  <a href="https://github.com/utranhost/pytots/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/utranhost/pytots?style=for-the-badge&labelColor=232323&color=6a994e" alt="GitHub License"/>
+  </a>
+</p>
 
-[![GitHub stars](https://img.shields.io/github/stars/utranhost/pytots?style=for-the-badge)](https://github.com/utranhost/pytots)
-[![GitHub forks](https://img.shields.io/github/forks/utranhost/pytots?style=for-the-badge)](https://github.com/utranhost/pytots)
-[![GitHub issues](https://img.shields.io/github/issues/utranhost/pytots?style=for-the-badge)](https://github.com/utranhost/pytots/issues)
-[![GitHub license](https://img.shields.io/github/license/utranhost/pytots?style=for-the-badge)](https://github.com/utranhost/pytots/blob/main/LICENSE)
 
-**pytots** 是一个轻量级但功能强大的工具，专门用于将Python类型定义自动转换为TypeScript类型定义。无论您是构建全栈应用、API接口还是需要前后端类型同步，pytots都能帮助您保持类型一致性，提高开发效率。
+# 🐍➡️🚀 pytots
 
-## ✨ 核心特性
+一个轻量级工具，帮助你将 **Python 类型** 优雅地转换为 **TypeScript 类型**。
 
-### 🔄 智能类型转换
-- **基础类型映射**: `str` → `string`, `int/float` → `number`, `bool` → `boolean`
-- **容器类型支持**: `List[T]`, `Dict[K, V]`, `Set[T]`, `Tuple[...]`
-- **高级类型处理**: `Union`, `Optional`, `Literal`, `TypedDict`
-- **枚举类型支持**: Python `enum.Enum` → TypeScript `enum`
-- **自定义类型**: `NewType`, `TypeVar`, 用户定义类
 
-### 🧩 插件生态系统
-- **Pydantic集成**: 自动转换Pydantic BaseModel为TypeScript接口
-- **SQLModel支持**: 数据库模型无缝转换为前端类型
-- **可扩展架构**: 轻松添加对新类型系统的支持
+---
 
-### 🔧 开发者友好
-- **循环引用检测**: 自动识别并处理类型间的循环依赖
-- **多种输出格式**: 支持字符串输出和文件直接写入
-- **代码格式化**: 生成整洁、可读的TypeScript代码
+## ✨ 特性
 
-## 🚀 快速开始
+- 🔧 **基础 Python → TypeScript 类型转换**  
+- 🌈 **高级类型转换**：联合类型、可选类型、字面量类型等  
+- 🔄 **循环引用处理**：自动检测并化解类型循环依赖  
+- 🎨 **自定义类型映射**：可扩展的映射表，随心定制  
+- 🔌 **插件系统**：即插即用，轻松扩展新类型  
+- 📄 **多种输出格式**：一键生成字符串或落盘文件  
 
-### 安装
-```bash
-# 使用uv（推荐）
-uv add pytots
+---
 
-# 或使用pip
-pip install pytots
-```
+## 📦 支持的类型
 
-### 基本使用
+| 类别 | 图标 | 类型示例 |
+|---|---|---|
+| 基础类型 | 🔤 | `str`, `int`, `float`, `bool`, `None`, `Any`, `object` |
+| 容器类型 | 📚 | `List`, `Dict`, `Set`, `Tuple`, `Union`, `Optional` |
+| 自定义类型 | 🧩 | `NewType`, `TypeVar`, `TypedDict` |
+| 类类型 | 🏗️ | `dataclass` 自动转换 |
+| 函数类型 | ⚙️ | 函数签名级转换 |
+| 插件加持 | 🔌 | Pydantic BaseModel, SQLModel … |
+
+---
+
+## 🚀 安装
+
+| 包管理器 | 命令 |
+|---|---|
+| **uv** | `uv add pytots` |
+| **pip** | `pip install pytots` |
+
+---
+
+## 🏁 快速开始
+
+### 1️⃣ 基础使用
+
 ```python
-from pytots import convert_to_ts, get_output_ts_str, output_ts_file
-from typing import List, Dict, Optional
-import enum
+from pytots import convert_to_ts,get_output_ts_str
+from typing import List,TypedDict
 
-# 转换Python类型为TypeScript
-print("=== 基础类型转换演示 ===")
-
-# 基本类型
-print(f"str -> {convert_to_ts(str)}")        # string
-print(f"int -> {convert_to_ts(int)}")        # number
-print(f"bool -> {convert_to_ts(bool)}")      # boolean
-
-# 容器类型
-print(f"List[int] -> {convert_to_ts(List[int])}")          # Array<number>
-print(f"Dict[str, int] -> {convert_to_ts(Dict[str, int])}") # Record<string, number>
-print(f"Optional[str] -> {convert_to_ts(Optional[str])}")   # string | null | undefined
-
-# 集合类型（新增支持）
-print(f"Set[int] -> {convert_to_ts(Set[int])}")            # Set<number>
-print(f"FrozenSet[str] -> {convert_to_ts(FrozenSet[str])}") # ReadonlySet<string>
-print(f"tuple[int, str] -> {convert_to_ts(tuple[int, str])}") # [number, string]
-print(f"tuple[int, ...] -> {convert_to_ts(tuple[int, ...])}") # number[]
-
-# collections模块类型
-from collections import deque, Counter, ChainMap
-print(f"deque[str] -> {convert_to_ts(deque[str])}")          # Array<string>
-print(f"Counter[str] -> {convert_to_ts(Counter[str])}")      # Record<string, number>
-print(f"ChainMap[str, int] -> {convert_to_ts(ChainMap[str, int])}") # Record<string, number>
-
-# 新增基础类型
-import decimal
-import uuid
-print(f"bytes -> {convert_to_ts(bytes)}")                    # Uint8Array
-print(f"object -> {convert_to_ts(object)}")                  # any
-print(f"decimal.Decimal -> {convert_to_ts(decimal.Decimal)}") # number
-print(f"uuid.UUID -> {convert_to_ts(uuid.UUID)}")           # string
-print(f"complex -> {convert_to_ts(complex)}")               # {real: number, imag: number}
-print(f"range -> {convert_to_ts(range)}")                   # {start: number, stop: number, step: number}
-
-# 枚举类型
-class Color(enum.Enum):
-    RED = 1
-    GREEN = 2
-    BLUE = 3
-
-class Status(enum.Enum):
-    PENDING = "pending"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-
-print(f"Color enum -> {convert_to_ts(Color)}")  # enum Color { RED = 1, GREEN = 2, BLUE = 3 }
-print(f"Status enum -> {convert_to_ts(Status)}") # enum Status { PENDING = 'pending', ... }
+class TicketType(TypedDict):
+    id: int
+    name: str
+    description: str
+    
+# 基础类型转换
+o_type = convert_to_ts(TicketType)
+print(o_type)  #输出 -> TicketType
 
 # 获取完整的TypeScript代码字符串
-ts_code = get_output_ts_str()
+ts_code = get_output_ts_str(None,True)
 print(ts_code)
-
-# 直接输出到文件
-output_ts_file("output/types.ts")
+```
+输出结果：
+``` typescript
+type TicketType = {
+    id : number;
+    name : string;
+    description : string;
+}
 ```
 
-### 自定义类型映射
-
-pytots 提供了 `replaceable_type_map` 函数，允许您自定义特定类型的映射规则。这对于需要特殊处理或自定义类型转换的场景非常有用。
+#### 1.1 获取类型字符串
 
 ```python
-from pytots import convert_to_ts, replaceable_type_map
+# 获取类型字符串
+type_str = convert_to_ts(TicketType)
+print(type_str)  # 输出: "TicketType"
+```
+
+#### 1.2 输出到文件
+
+```python
+# 直接输出到文件
+output_ts_file("output/types.d.ts", "MyModule",True)
+```
+
+
+
+### 2️⃣ 自定义类型映射
+目前支持以下类型自定义，默认的映射关系如下：
+- `datetime.date`  => `string`
+- `datetime.datetime`  => `string`
+- `None`  => `"undefined | null"`
+
+修改默认映射关系：
+```python
+from pytots import replaceable_type_map
 import datetime
 
-print("=== 自定义类型映射演示 ===")
+# 自定义可替换类型映射
+replaceable_type_map({
+    datetime.date: "Date",
+    datetime.datetime: "Date",
+})
+```
 
-# 默认情况下，datetime.date 会被转换为 "Date"
-print(f"默认 datetime.date -> {convert_to_ts(datetime.date)}")  # Date
+### 3️⃣ 插件系统
+pytots提供了一个灵活的插件系统，允许你扩展对特定类型的支持。
+#### 3.1 内置插件
+当前已内置了以下插件，无需注册自动启用：
+- `DataclassPlugin`：数据类插件，将Python dataclass转换为TypeScript类型。
+- `TypedDictPlugin`：字典插件，将Python TypedDict转换为TypeScript类型。
 
-# 使用 replaceable_type_map 自定义映射规则
-# 将 datetime.date 映射为自定义的字符串类型
-result = replaceable_type_map(datetime.date, "string")
-print(f"自定义datetime.date映射结果: {result}")  # True
+#### 3.2 扩展插件
+当前已集成了以下扩展插件：
+- `PydanticPlugin`：支持将Pydantic BaseModel转换为TypeScript类型。
+- `SqlModelPlugin`：支持将SQLModel转换为TypeScript类型。
 
-# 现在 datetime.date 会被转换为 "string"
-print(f"自定义后的 datetime.date -> {convert_to_ts(datetime.date)}")  # string
+扩展插件需要手动注册才能生效，使用方式：
+```python
+from pytots import use_plugin
+from pytots.plugin.plus import PydanticPlugin, SqlModelPlugin
 
-# 将 None 类型映射为更简洁的 "undefined"
-replaceable_type_map(None, "undefined")
-print(f"自定义后的 None -> {convert_to_ts(None)}")  # undefined
+# 注册插件
+use_plugin(PydanticPlugin(), SqlModelPlugin())
+```
 
-# 将 datetime.datetime 映射为更精确的时间戳类型
-replaceable_type_map(datetime.datetime, "number")
-print(f"自定义后的 datetime.datetime -> {convert_to_ts(datetime.datetime)}")  # number
+#### 3.3 修改插件默认行为：
+系统默认在处理dataclass和typedict时，会使用`type`前缀的TypeScript类型。如果需要将其修改为`interface`，可以通过覆盖插件默认行为实现。
 
-# 尝试映射不支持的类型的示例
-class CustomType:
+```python
+from pytots import override_plugin
+from pytots.plugin.inner import DataclassPlugin, TypedDictPlugin
+
+# 覆盖默认插件行为
+override_plugin(
+    DataclassPlugin(dict(type_prefix="interface")),
+    TypedDictPlugin(dict(type_prefix="interface"))
+    )
+```
+
+#### 3.4 自定义插件
+根据需要自定义插件，继承`DataclassPlugin`插件类，并实现`is_supported`方法。
+
+##### 3.4.1 插件简单用法示例
+假设你有一些类，你想将其转换为TypeScript类型。
+```python
+from typing import Generic,TypeVar
+
+T = TypeVar("T")
+
+class MyUser:
+    id: int
+    name: str
+
+class MyAdmin(MyUser):
+    role: str
+
+class MyTicket(Generic[T]):
+    id: int
+    name: str
+    description: str|None
+    exc: T|None
+
+
+class MyTicketAdmin(MyTicket[MyAdmin]):
     pass
-
-result = replaceable_type_map(CustomType, "any")
-print(f"尝试映射自定义类型: {result}")  # False，因为CustomType不在可替换类型列表中
+    
 ```
 
-**可替换类型列表**：
-- `datetime.date`
-- `datetime.datetime` 
-- `None`
-
-**使用场景**：
-- 当您需要将日期类型映射为不同的TypeScript类型时
-- 当您想要简化 `None` 类型的映射时
-- 当您需要与现有TypeScript代码库保持类型一致性时
-
-### Pydantic模型转换
+自定义插件
 ```python
-from pytots.plugin.plus import PydanticPlugin
-from pytots import use_plugin, convert_to_ts
-from pydantic import BaseModel
+from pytots import Plugin
+from typing import Any
 
-# 启用Pydantic插件
-use_plugin(PydanticPlugin())
+class MyCustomPlugin(DataclassPlugin):
+    name = "MyCustomPlugin"    # 插件名称
+    type_prefix = "interface"  # 使用interface前缀
 
-class User(BaseModel):
-    id: int
-    name: str
-    email: str
-
-# 自动转换为TypeScript接口
-convert_to_ts(User)
+    def is_supported(self, python_type) -> bool:
+        return python_type in [MyUser,MyTicket,MyAdmin,MyTicketAdmin]
 ```
-
-## 📊 支持的类型系统
-
-| Python类型 | TypeScript类型 | 示例 |
-|-----------|---------------|------|
-| `str` | `string` | `name: string` |
-| `int`, `float` | `number` | `age: number` |
-| `bool` | `boolean` | `is_active: boolean` |
-| `bytes` | `Uint8Array` | `data: Uint8Array` |
-| `bytearray` | `Uint8Array` | `buffer: Uint8Array` |
-| `complex` | `{real: number, imag: number}` | `value: {real: number, imag: number}` |
-| `range` | `{start: number, stop: number, step: number}` | `range: {start: number, stop: number, step: number}` |
-| `type(None)` | `null \| undefined` | `value: null \| undefined` |
-| `object` | `any` | `obj: any` |
-| `decimal.Decimal` | `number` | `price: number` |
-| `uuid.UUID` | `string` | `id: string` |
-| `List[T]` | `Array<T>` | `tags: Array<string>` |
-| `Dict[K, V]` | `Record<K, V>` | `data: Record<string, number>` |
-| `Set[T]` | `Set<T>` | `unique_ids: Set<number>` |
-| `FrozenSet[T]` | `ReadonlySet<T>` | `constants: ReadonlySet<string>` |
-| `tuple[T]` | `[T]` | `coordinates: [number]` |
-| `tuple[T1, T2]` | `[T1, T2]` | `point: [number, number]` |
-| `tuple[T, ...]` | `T[]` | `items: number[]` |
-| `deque[T]` | `Array<T>` | `queue: Array<string>` |
-| `Counter[T]` | `Record<T, number>` | `word_count: Record<string, number>` |
-| `ChainMap[K, V]` | `Record<K, V>` | `config: Record<string, any>` |
-| `Optional[T]` | `T \| null \| undefined` | `email?: string \| null \| undefined` |
-| `Union[T, U]` | `T \| U` | `status: 'active' \| 'inactive'` |
-| `enum.Enum` | `enum` | `enum Color { RED = 1, GREEN = 2, BLUE = 3 }` |
-
-## 🎯 使用场景
-
-### 全栈开发
-保持前后端类型定义同步，减少手动维护成本
-
-### API文档生成
-自动从Python模型生成TypeScript客户端类型
-
-### 微服务架构
-在多个服务间共享类型定义，确保接口一致性
-
-### 数据库模型同步
-将SQLModel/Pydantic模型转换为前端可用的类型
-
-## 🔗 相关链接
-
-- 📖 **文档**: [查看完整文档](https://github.com/utranhost/pytots#readme)
-- 🐛 **问题反馈**: [提交Issue](https://github.com/utranhost/pytots/issues)
-- 💡 **功能建议**: [参与讨论](https://github.com/utranhost/pytots/discussions)
-- ⭐ **支持项目**: 如果这个工具对您有帮助，请给个Star！
-
-## 🤝 贡献
-
-我们欢迎各种形式的贡献！无论是代码改进、文档完善还是功能建议，都可以通过以下方式参与：
-
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
-
-## 🙏 致谢
-
-感谢所有为这个项目做出贡献的开发者！特别感谢：
-
-- Pydantic 团队提供的优秀类型系统
-- TypeScript 社区的灵感
-- 所有使用和反馈这个项目的开发者
-
----
-
-**开始使用 pytots，让您的类型定义工作变得更加高效和愉快！** 🎉
-
----
-
-## 功能特性
-
-- **支持基本Python类型到TypeScript类型的转换**
-- **支持高级类型转换**：Union、Optional、Literal等
-- **处理循环引用问题**：自动检测并处理类型间的循环依赖
-- **增强的泛型支持**：支持复杂的泛型类、泛型接口和参数替换机制
-- **统一的类型映射**：改进的类型映射系统，提供更丰富的类型信息和处理能力
-- **支持自定义类型映射**：可扩展的类型映射系统
-- **插件系统**：支持通过插件扩展功能
-- **多种输出格式**：支持字符串输出和文件输出
-
-### 支持的具体类型
-
-- **基本类型**：`str`, `int`, `float`, `bool`, `None`, `Any`, `object`
-- **容器类型**：`List`, `Dict`, `Set`, `FrozenSet`, `Tuple`, `deque`, `Counter`, `ChainMap`, `Union`, `Optional`
-- **自定义类型**：`NewType`, `TypeVar`
-- **类类型**：`dataclass` 类转换
-- **函数类型**：函数签名转换
-- **泛型类型**：增强的泛型类和泛型接口支持
-- **插件支持**：Pydantic BaseModel、SQLModel
-
-## 安装
-
-使用uv安装：
-
-```bash
-uv add pytots
-```
-
-或者使用pip：
-
-```bash
-pip install pytots
-```
-
-## 快速开始
-
-### 基本使用
-
+使用自定义插件
 ```python
-from pytots import convert_to_ts, get_output_ts_str, output_ts_file
-from typing import List, Dict, Optional
+from pytots import use_plugin
+from pytots import convert_to_ts,get_output_ts_str
 
-# 基本类型转换
-print("=== 基础类型转换演示 ===")
+use_plugin(MyCustomPlugin())
 
-# 基本类型
-print(f"str -> {convert_to_ts(str)}")        # string
-print(f"int -> {convert_to_ts(int)}")        # number
-print(f"bool -> {convert_to_ts(bool)}")      # boolean
+# 转换自定义类型
+o_type = convert_to_ts(MyTicketAdmin)
+print(o_type)  #输出 -> MyTicketAdmin
 
-# 容器类型
-print(f"List[int] -> {convert_to_ts(List[int])}")          # Array<number>
-print(f"Dict[str, int] -> {convert_to_ts(Dict[str, int])}") # Record<string, number>
-print(f"Optional[str] -> {convert_to_ts(Optional[str])}")   # string | null | undefined
-
-# 获取完整的TypeScript代码字符串
-ts_code = get_output_ts_str()
+# 查看转换后的具体ts代码
+ts_code = get_output_ts_str(None,True)
 print(ts_code)
 
-# 直接输出到文件
-output_ts_file("output/types.ts")
+```
+转换结果:
+```typescript
+interface MyAdmin {
+    id : number;
+    name : string;
+    role : string;
+}
+interface MyTicket<T extends any> {
+    id : number;
+    name : string;
+    description ? : string | null | undefined;
+    exc ? : T | null | undefined;
+}
+interface MyTicketAdmin extends MyTicket<MyAdmin> {
+    id : number;
+    name : string;
+    description ? : string | null | undefined;
+    exc ? : MyAdmin | null | undefined;
+}
+```
+##### 3.4.2 插件高级用法示例
+实现对特定类型的转换或过滤一些类型时。可继承`Plugin`类，实现`converter`和`is_supported`方法。如有大量现有类需要直接进行字符串映射时，可以定义`TYPES_MAP`字典，键为Python类型，值为对应的TypeScript类型的字符串。
+
+以下示例演示过滤掉`id`字段：
+```python
+from pytots.plugin.tools import generic_feild_fill,assemble_interface_type
+
+class MyCustomPlugin(Plugin):
+    
+    name = "MyCustomPlugin"
+    type_prefix = "interface"
+    
+    def is_supported(self, python_type) -> bool:
+        return python_type in [MyUser,MyTicket,MyAdmin,MyTicketAdmin]
+
+    def converter(self, python_type, **extra) -> str:
+        class_name = python_type.__name__
+        fields = []
+        for field, field_type in get_type_hints(python_type).items():
+            ts_type = generic_feild_fill(self,field_type)
+
+            # 过滤掉id字段
+            if field == "id":
+                continue
+            
+            # 处理可选字段
+            if "undefined" in ts_type:
+                fields.append(f"{field}?: {ts_type};")
+            else:
+                fields.append(f"{field}: {ts_type};")
+
+        fields_str = "\n  ".join(fields)
+        
+        return assemble_interface_type(self, class_name, fields_str)
+```
+同上面一样执行，得到转换结果：
+```typescript
+interface MyAdmin {
+    name : string;
+    role : string;
+}
+interface MyTicket<T extends any> {
+    name : string;
+    description ? : string | null | undefined;
+    exc ? : T | null | undefined;
+}
+interface MyTicketAdmin extends MyTicket<MyAdmin> {
+    name : string;
+    description ? : string | null | undefined;
+    exc ? : MyAdmin | null | undefined;
+}
 ```
 
-### 支持的类型示例
+
+
+## 🔌 核心接口
+
+| 函数 | 说明 | 签名 |
+|---|---|---|
+| `convert_to_ts` | 将单个 Python 类型转为 TypeScript 类型字符串 | `convert_to_ts(python_type) -> str` |
+| `get_output_ts_str` | 获取当前已转换的全部 TypeScript 代码 | `get_output_ts_str(module_name=None, format=False) -> str` |
+| `output_ts_file` | 将结果直接写入 `.d.ts` 文件 | `output_ts_file(file_path, module_name=None, format=False) -> None` |
+| `replaceable_type_map` | 全局覆盖默认类型映射表 | `replaceable_type_map(type_map: dict[type, str]) -> None` |
+| `use_plugin` | 注册一个或多个插件 | `use_plugin(*plugins: Plugin) -> None` |
+| `override_plugin` | 用新实例覆盖同名插件 | `override_plugin(*plugins: Plugin) -> None` |
+
+
+✨ **重要特性：**
+>  **自动级联**：只要调用一次 `convert_to_ts`，其依赖的所有类型会被隐式转换并缓存，后续直接通过 `get_output_ts_str` 即可一次性拿到完整代码。
+
+> 你可能发现了前面的示例我们并没有每一个类型都去处理，但是却转换了全部相关的类型。
+这是因为pytots在处理类型时，会自动地处理所有相关的类型。
+
+
+
+### convert_to_ts
+
+将Python类型转换为TypeScript类型。
 
 ```python
-from typing import NewType, TypeVar, Optional, List, Generic
-from dataclasses import dataclass
-from pytots import convert_to_ts, get_output_ts_str
-
-# NewType 转换
-UserId = NewType("UserId", int)
-
-# TypeVar 转换
-T = TypeVar("T", int, str)
-
-# dataclass 转换
-@dataclass
-class User:
-    id: int
-    name: str
-    email: Optional[str] = None
-
-# 泛型类转换
-class QueryResult(Generic[T]):
-    data: List[T]
-    total_count: int
-
-# 函数类型转换
-def process_user(user: User) -> bool:
-    return True
-
-# 转换所有类型
-convert_to_ts(UserId)
-convert_to_ts(T)
-convert_to_ts(User)
-convert_to_ts(QueryResult[User])
-convert_to_ts(process_user)
-
-# 获取完整的TypeScript定义
-ts_code = get_output_ts_str()
-print(ts_code)
+convert_to_ts(python_type) -> str
 ```
 
-## 插件系统
 
-pytots 提供了插件系统，可以扩展支持更多类型系统。插件系统现在支持通过 `generic_feild_fill` 函数实现高级泛型类型处理。
 
-### Pydantic 支持
+
+### get_output_ts_str
+
+获取转换后的TypeScript代码字符串。
 
 ```python
-from pytots.plugin.plus.pydantic_plugin import PydanticPlugin
-from pytots import use_plugin, convert_to_ts, get_output_ts_str
-from pydantic import BaseModel, EmailStr, Generic as PydanticGeneric
-
-# 启用Pydantic插件
-use_plugin(PydanticPlugin())
-
-# 基本模型转换
-class User(BaseModel):
-    id: int
-    name: str
-    email: EmailStr
-    age: Optional[int] = None
-
-# 泛型模型转换
-class ResponseModel(PydanticGeneric[T]):
-    data: T
-    success: bool
-
-# 转换Pydantic模型
-convert_to_ts(User)
-convert_to_ts(ResponseModel[User])
-ts_code = get_output_ts_str()
-print(ts_code)
+get_output_ts_str(module_name: str | None = "PytsDemo", format: bool = False) -> str
 ```
 
-### SQLModel 支持
+### output_ts_file
+
+将转换结果输出到文件。
 
 ```python
-from pytots.plugin.plus.sqlmodel_plugin import SqlModelPlugin
-from pytots import use_plugin, convert_to_ts, get_output_ts_str
-from sqlmodel import SQLModel, Field
-from typing import Generic, TypeVar
-
-# 启用SQLModel插件
-use_plugin(SqlModelPlugin())
-
-# 基本模型转换
-class User(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True)
-    email: str = Field(unique=True)
-
-# 泛型响应模型
-class PaginatedResponse(Generic[T]):
-    items: List[T]
-    total: int
-    page: int
-    size: int
-
-# 转换SQLModel和泛型模型
-convert_to_ts(User)
-convert_to_ts(PaginatedResponse[User])
-ts_code = get_output_ts_str()
-print(ts_code)
+output_ts_file(file_path: str, module_name: str | None = "PytsDemo", format: bool = False) -> None
 ```
 
-## API 参考
+### replaceable_type_map
 
-### 主要函数
+自定义可替换类型映射。
 
-- `convert_to_ts(obj) -> str`：转换单个Python类型为TypeScript定义
-- `get_output_ts_str(module_name: str | None = "PytsDemo", format: bool = False) -> str`：获取完整的TypeScript代码字符串
-- `output_ts_file(file_path: str, module_name: str | None = "PytsDemo", format: bool = True) -> None`：输出TypeScript代码到文件
-- `reset_store() -> None`：清除所有已转换的类型定义缓存
-
-### 类型映射配置
-
-- `replaceable_type_map(type_, value) -> bool`：自定义可替换类型的映射规则
-
-### 插件相关
-
-- `Plugin`：插件基类
-- `use_plugin(plugin: Plugin) -> None`：启用插件
-
-## 示例
-
-查看 `pytots/example/` 目录下的示例文件：
-
-- `basic_types_example.py` - 基本类型转换示例
-- `advanced_types_example.py` - 高级类型转换示例
-- `circular_reference_example.py` - 循环引用处理示例
-- `pydantic_example.py` - Pydantic 类型转换示例
-- `sqlmodel_example.py` - SQLModel 类型转换示例
-- `replaceable_type_map_example.py` - 自定义类型映射示例
-
-## 开发
-
-### 安装开发依赖
-
-```bash
-uv sync --group dev
+```python
+replaceable_type_map(type_map: dict[type, str]) -> None
 ```
 
-### 运行测试
+### use_plugin
 
-```bash
-pytest
+注册插件。
+
+```python
+use_plugin(*plugins: Plugin) -> None
 ```
 
-### 项目结构
+### override_plugin
 
-```
-pytots/
-├── __init__.py          # 主模块导出
-├── main.py              # 主要功能函数
-├── type_map.py          # 类型映射系统（增强的泛型支持）
-├── processer.py         # 类型处理器（改进的泛型接口处理）
-├── formart.py           # 代码格式化
-├── store.py             # 存储机制（新增泛型接口存储）
-└── plugin/              # 插件系统
-    ├── __init__.py
-    ├── tools.py         # 插件工具（包含generic_feild_fill函数）
-    └── plus/            # 扩展插件
-        ├── pydantic_plugin.py
-        └── sqlmodel_plugin.py
+覆盖已注册的插件。
+
+```python
+override_plugin(*plugins: Plugin) -> None
 ```
 
-## 许可证
-
-MIT License

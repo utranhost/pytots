@@ -95,24 +95,23 @@ def test_complex_nested_types():
 def test_type_mapping_integration():
     """测试类型映射集成"""
     # 测试类型映射表是否正常工作
-    from pytots.clf import SINGLE_TYPES_MAP, PYDANTIC_TYPES_MAP, SQLMODEL_TYPES_MAP
+    from pytots.clf import SINGLE_TYPES_MAP, REPLACEABLE_TYPES_MAP
+    import datetime
     
     # 检查映射表是否存在且包含正确的条目
     assert str in SINGLE_TYPES_MAP
     assert int in SINGLE_TYPES_MAP
-    assert "EmailStr" in PYDANTIC_TYPES_MAP
-    assert "HttpUrl" in PYDANTIC_TYPES_MAP
-    assert "AutoString" in SQLMODEL_TYPES_MAP
-    assert "BigInteger" in SQLMODEL_TYPES_MAP
+    assert datetime.date in REPLACEABLE_TYPES_MAP  # datetime.date 映射为 string
 
 
 def test_function_availability():
     """测试新增函数是否可用"""
-    from pytots.type_map import map_pydantic_type, map_sqlmodel_type
+    from pytots.type_map import handle_deque_type, handle_counter_type, handle_chainmap_type
     
     # 检查函数是否存在
-    assert callable(map_pydantic_type)
-    assert callable(map_sqlmodel_type)
+    assert callable(handle_deque_type)
+    assert callable(handle_counter_type)
+    assert callable(handle_chainmap_type)
 
 
 if __name__ == "__main__":

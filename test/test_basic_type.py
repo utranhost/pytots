@@ -22,8 +22,8 @@ def test_basic_types():
     
     # 用户可替换类型
     assert convert_to_ts(None) == "undefined | null"
-    assert convert_to_ts(datetime.datetime) == "Date"
-    assert convert_to_ts(datetime.date) == "Date"
+    assert convert_to_ts(datetime.datetime) == "string"
+    assert convert_to_ts(datetime.date) == "string"
     
     
 def test_set_types():

@@ -358,6 +358,9 @@ def map_base_type(
         # __stack.append(python_type)
         return {"code":python_type.__forward_arg__}
 
+    # 2. 简略处理 Final 和 ClassVar 类型
+    if get_origin(python_type) in [typing.Final, typing.ClassVar]:
+        python_type = get_args(python_type)[0]  # 获取 Final 或 ClassVar 的原始类型
 
 
     __stack.append(python_type)

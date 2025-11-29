@@ -181,7 +181,7 @@ class TypeScriptFormatter:
 
             # 操作符处理 (简单处理，前后加空格)
             # 这里仅作示例，处理 = ? : 等符号
-            if char in ['=', '?', ':', '+', '-', '*', '%', '>', '<'] and not self.paren_level:
+            if char in ['=', '?', ':', '+', '-', '*', '%'] and not self.paren_level:
                 # 排除 ++, --, ==, => 等双字符情况的干扰（简化版未完美处理，但够用）
                 is_double = (next_char == char or next_char == '=' or (char == '=' and next_char == '>'))
                 
